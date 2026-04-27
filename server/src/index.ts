@@ -1,26 +1,26 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/use/ws';
-import express, { Request } from 'express';
-import http from 'http';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import { expressjwt } from 'express-jwt';
-import jwksRsa from 'jwks-rsa';
-import { typeDefs } from './interfaces/graphql/schemas/index.js';
-import { resolvers } from './interfaces/graphql/resolvers/index.js';
+import { ApolloServer } from "@apollo/server";
+import { expressMiddleware } from "@apollo/server/express4";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/use/ws";
+import express, { Request } from "express";
+import http from "http";
+import cors from "cors";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import { expressjwt } from "express-jwt";
+import jwksRsa from "jwks-rsa";
+import { typeDefs } from "./interfaces/graphql/schemas/index.js";
+import { resolvers } from "./interfaces/graphql/resolvers/index.js";
 
 dotenv.config();
 
 const authConfig = {
-  domain: process.env.AUTH0_DOMAIN || 'your-domain.auth0.com',
-  audience: process.env.AUTH0_AUDIENCE || 'your-api-identifier',
+  domain: process.env.AUTH0_DOMAIN || "your-domain.auth0.com",
+  audience: process.env.AUTH0_AUDIENCE || "your-api-identifier",
 };
 
 const checkJwt = expressjwt({
@@ -32,7 +32,7 @@ const checkJwt = expressjwt({
   }) as any,
   audience: authConfig.audience,
   issuer: `https://${authConfig.domain}/`,
-  algorithms: ['RS256'],
+  algorithms: ["RS256"],
   credentialsRequired: false,
 });
 
@@ -45,7 +45,7 @@ async function startServer() {
   // Create WebSocket server
   const wsServer = new WebSocketServer({
     server: httpServer,
-    path: '/graphql',
+    path: "/graphql",
   });
 
   // Handle subscriptions with graphql-ws
@@ -53,13 +53,13 @@ async function startServer() {
     {
       schema,
       onConnect: async (ctx) => {
-        console.log('WS Connected');
+        console.log("WS Connected");
       },
       onDisconnect(ctx, code, reason) {
-        console.log('WS Disconnected');
+        console.log("WS Disconnected");
       },
     },
-    wsServer
+    wsServer,
   );
 
   const server = new ApolloServer({
@@ -82,25 +82,25 @@ async function startServer() {
   await server.start();
 
   app.use(
-    '/graphql',
+    "/graphql",
     cors<cors.CorsRequest>(),
     bodyParser.json(),
     checkJwt,
     expressMiddleware(server, {
       context: async ({ req }: { req: any }) => {
-        return { userId: req.auth?.sub || 'guest-user', user: req.auth };
+        return { userId: req.auth?.sub || "guest-user", user: req.auth };
       },
     }),
   );
 
-  const PORT = process.env.PORT || 4000;
+  const PORT = process.env.PORT || 3000;
 
   if (process.env.MONGODB_URI) {
     try {
       await mongoose.connect(process.env.MONGODB_URI);
-      console.log('Connected to MongoDB');
+      console.log("Connected to MongoDB");
     } catch (err) {
-      console.warn('Could not connect to MongoDB, proceeding without DB:', err);
+      console.warn("Could not connect to MongoDB, proceeding without DB:", err);
     }
   }
 
@@ -110,6 +110,6 @@ async function startServer() {
   });
 }
 
-startServer().catch(err => {
-  console.error('Error starting server:', err);
+startServer().catch((err) => {
+  console.error("Error starting server:", err);
 });
