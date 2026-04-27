@@ -8,6 +8,8 @@ const pubsub = new PubSub();
 const taskRepository = RepositoryFactory.getTaskRepository();
 const auditLogRepository = RepositoryFactory.getAuditLogRepository();
 const noteRepository = RepositoryFactory.getNoteRepository();
+const projectRepository = RepositoryFactory.getProjectRepository();
+const userRepository = RepositoryFactory.getUserRepository();
 
 const getTasksUC = new GetTasksUseCase(taskRepository);
 const createTaskUC = new CreateTaskUseCase(taskRepository);
@@ -21,6 +23,19 @@ export const resolvers = {
     },
     task: (_: any, { id }: any) => {
       return taskRepository.findById(id);
+    },
+    projects: () => {
+      return projectRepository.findAll();
+    },
+    project: (_: any, { id }: any) => {
+      return projectRepository.findById(id);
+    },
+    users: () => {
+      return (userRepository as any).findAll();
+    },
+    me: (_: any, __: any, context: any) => {
+      if (!context.userId || context.userId === 'guest-user') return null;
+      return userRepository.findByAuth0Id(context.userId);
     },
     notes: (_: any, { projectId, taskId }: any) => {
       const filter: any = {};
@@ -38,6 +53,23 @@ export const resolvers = {
     },
     notes: (parent: any) => {
       return noteRepository.findAll({ taskId: parent.id });
+    },
+    project: (parent: any) => {
+      return projectRepository.findById(parent.projectId);
+    },
+    assignee: (parent: any) => {
+      if (!parent.assigneeId) return null;
+      return userRepository.findById(parent.assigneeId);
+    }
+  },
+  Project: {
+    tasks: (parent: any) => {
+      return taskRepository.findAll({ projectId: parent.id });
+    },
+    members: async (parent: any) => {
+      if (!parent.teamIds) return [];
+      const users = await Promise.all(parent.teamIds.map((id: string) => userRepository.findById(id)));
+      return users.filter(u => u !== null);
     }
   },
   Mutation: {
@@ -86,6 +118,12 @@ export const resolvers = {
       }
       return success;
     },
+    createProject: async (_: any, args: any, context: any) => {
+      const userId = context.userId || 'system-user';
+      const project = await projectRepository.create({ ...args, ownerId: userId, teamIds: [userId] });
+      pubsub.publish('PROJECT_CREATED', { projectCreated: project });
+      return project;
+    },
     createNote: async (_: any, args: any, context: any) => {
       const userId = context.userId || 'system-user';
       const note = await noteRepository.create({ ...args, creatorId: userId });
@@ -97,6 +135,17 @@ export const resolvers = {
     },
     deleteNote: (_: any, { id }: any) => {
       return noteRepository.delete(id);
+    },
+    syncUser: async (_: any, args: any, context: any) => {
+      const auth0Id = context.userId;
+      if (!auth0Id || auth0Id === 'guest-user') throw new Error('Unauthorized');
+
+      let user = await userRepository.findByAuth0Id(auth0Id);
+      if (user) {
+        // Update user if needed
+        return user;
+      }
+      return userRepository.create({ ...args, auth0Id });
     }
   },
   Subscription: {
@@ -105,6 +154,9 @@ export const resolvers = {
     },
     taskUpdated: {
       subscribe: () => (pubsub as any).asyncIterator(['TASK_UPDATED'])
+    },
+    projectCreated: {
+      subscribe: () => (pubsub as any).asyncIterator(['PROJECT_CREATED'])
     },
     noteCreated: {
       subscribe: () => (pubsub as any).asyncIterator(['NOTE_CREATED'])
