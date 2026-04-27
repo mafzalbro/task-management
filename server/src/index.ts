@@ -43,7 +43,20 @@ async function startServer() {
 
   const wsServer = new WebSocketServer({
     server: httpServer,
-    path: "/graphql/ws",
+    path: "/graphql",
+    handleProtocols: (protocols, request) => {
+      const requested = Array.isArray(protocols)
+        ? protocols
+        : Array.from(protocols);
+      console.log("WebSocket requested subprotocols:", requested, request.url);
+      if (requested.includes("graphql-transport-ws")) {
+        return "graphql-transport-ws";
+      }
+      if (requested.includes("graphql-ws")) {
+        return "graphql-ws";
+      }
+      return false;
+    },
   });
 
   wsServer.on("connection", (socket, request) => {
@@ -112,7 +125,7 @@ async function startServer() {
   httpServer.listen(PORT, () => {
     console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     console.log(
-      `🚀 WebSocket subscriptions ready at ws://localhost:${PORT}/graphql/ws`,
+      `🚀 WebSocket subscriptions ready at ws://localhost:${PORT}/graphql`,
     );
   });
 }
