@@ -1,53 +1,32 @@
-import React, { useState } from "react";
-import type { Post, TaskStatus } from "../types";
+import React from "react";
+import type { Post } from "../types";
+import { Plus, Search } from "lucide-react";
 import TaskCard from "./TaskCard";
-import { Plus, MoreHorizontal } from "lucide-react";
 
 interface TaskBoardProps {
   tasks: Post[];
+  onAdd: () => void;
   onEdit: (task: Post) => void;
   onDelete: (id: string) => void;
-  onAdd: () => void;
   onMove: (id: string, status: Post["status"]) => void;
 }
 
-const COLUMNS: { status: TaskStatus; color: string }[] = [
-  { status: "To Do", color: "#94A3B8" },
-  { status: "In Progress", color: "var(--warning)" },
-  { status: "Review", color: "var(--primary)" },
-  { status: "Completed", color: "var(--success)" },
-];
-
 const TaskBoard: React.FC<TaskBoardProps> = ({
   tasks,
+  onAdd,
   onEdit,
   onDelete,
-  onAdd,
   onMove,
 }) => {
-  const [activeColumn, setActiveColumn] = useState<TaskStatus | null>(null);
-
-  const handleDragOver = (e: React.DragEvent, status: TaskStatus) => {
-    e.preventDefault();
-    setActiveColumn(status);
-  };
-
-  const handleDragLeave = () => {
-    setActiveColumn(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, status: TaskStatus) => {
-    e.preventDefault();
-    const taskId = e.dataTransfer.getData("taskId");
-    if (taskId) {
-      onMove(taskId, status);
-    }
-    setActiveColumn(null);
-  };
+  const columns: Post["status"][] = [
+    "To Do",
+    "In Progress",
+    "Review",
+    "Completed",
+  ];
 
   return (
     <div className="main-content">
-      {/* Header with quick stats */}
       <div
         className="flex justify-between items-center"
         style={{ marginBottom: "32px" }}
@@ -55,143 +34,62 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
         <div>
           <h2
             style={{
-              fontSize: "28px",
+              fontSize: "26px",
               fontWeight: 800,
-              letterSpacing: "-0.03em",
+              letterSpacing: "-0.02em",
             }}
           >
-            Kanban Board
+            Task Board
           </h2>
-          <p
-            style={{
-              fontSize: "15px",
-              color: "var(--text-muted)",
-              marginTop: "4px",
-              fontWeight: 500,
-            }}
+          <div
+            className="flex items-center gap-4"
+            style={{ marginTop: "4px" }}
           >
-            Drag and drop tasks to manage your project workflow.
-          </p>
+             <p style={{ fontSize: "14px", color: "var(--text-muted)", fontWeight: 500 }}>
+              Manage your technical workflow with drag-and-drop precision.
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button className="btn-secondary">
-            <MoreHorizontal size={18} />
-          </button>
-          <button className="btn-primary" onClick={onAdd}>
-            <Plus size={18} strokeWidth={2.5} /> New Task
-          </button>
+        <div className="flex gap-3">
+            <div style={{ position: 'relative' }}>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                    type="text"
+                    placeholder="Quick search..."
+                    style={{
+                        padding: '8px 12px 8px 36px',
+                        fontSize: '13px',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-light)',
+                        background: 'white',
+                        width: '200px'
+                    }}
+                />
+            </div>
+            <button className="btn-primary" onClick={onAdd}>
+                <Plus size={18} /> New Task
+            </button>
         </div>
       </div>
 
-      <div
-        className="board-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "24px",
-          minWidth: "1000px",
-          paddingBottom: "20px",
-        }}
-      >
-        {COLUMNS.map(({ status, color }) => {
+      <div className="board-container">
+        {columns.map((status) => {
           const colTasks = tasks.filter((t) => t.status === status);
-          const isActive = activeColumn === status;
-
           return (
-            <div
-              key={status}
-              className={`board-column ${isActive ? "board-column-drag-over" : ""}`}
-              onDragOver={(e) => handleDragOver(e, status)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, status)}
-              style={{
-                background: "var(--bg-subtle)",
-                borderRadius: "16px",
-                padding: "16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-                minHeight: "calc(100vh - 240px)",
-                border: "2px dashed transparent",
-              }}
-            >
-              {/* Column Header */}
-              <div
-                className="flex items-center justify-between"
-                style={{
-                  padding: "4px 8px 12px",
-                  borderBottom: "1px solid rgba(0,0,0,0.04)",
-                  marginBottom: "4px",
-                }}
-              >
+            <div key={status} className="board-column">
+              <div className="column-header">
                 <div className="flex items-center gap-2">
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      background: color,
-                      display: "inline-block",
-                      boxShadow: `0 0 10px ${color}50`,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: 800,
-                      color: "var(--text-main)",
-                    }}
-                  >
-                    {status}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: "var(--text-muted)",
-                      background: "var(--bg-card)",
-                      padding: "2px 8px",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    {colTasks.length}
-                  </span>
+                  <span className="column-title">{status}</span>
+                  <span className="column-count">{colTasks.length}</span>
                 </div>
-                <button
-                  className="icon-btn-ghost"
-                  style={{ width: 28, height: 28 }}
-                  onClick={onAdd}
-                >
+                <button className="icon-btn-ghost" onClick={onAdd}>
                   <Plus size={16} />
                 </button>
               </div>
-
-              {/* Tasks Area */}
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
+              <div className="column-content">
                 {colTasks.length === 0 ? (
-                  <div
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "2px dashed var(--border-light)",
-                      borderRadius: "12px",
-                      color: "var(--text-muted)",
-                      fontSize: "13px",
-                      fontWeight: 500,
-                      padding: "40px 20px",
-                      textAlign: "center",
-                    }}
-                  >
-                    Drop tasks here
+                  <div className="empty-column-state">
+                     <p>No tasks in this stage</p>
                   </div>
                 ) : (
                   colTasks.map((task) => (
@@ -205,24 +103,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                   ))
                 )}
               </div>
-
-              {/* Add Task Button at bottom */}
-              {colTasks.length > 0 && (
-                <button
-                  onClick={onAdd}
-                  className="icon-btn-ghost"
-                  style={{
-                    width: "100%",
-                    borderRadius: "12px",
-                    padding: "10px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    gap: "8px",
-                  }}
-                >
-                  <Plus size={14} /> Add new task
-                </button>
-              )}
             </div>
           );
         })}
