@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Post } from "../types";
 import { FolderOpen, MoreHorizontal, Users, CheckCircle2 } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_PROJECTS, CREATE_PROJECT } from "../graphql/operations";
+import ProjectModal from "./ProjectModal";
 
 interface ProjectsViewProps {
   tasks: Post[];
@@ -17,16 +18,13 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 const ProjectsView: React.FC<ProjectsViewProps> = () => {
   const { data, loading, refetch } = useQuery(GET_PROJECTS);
   const [createProject] = useMutation(CREATE_PROJECT);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const projects = data?.projects || [];
 
-  const handleCreateProject = async () => {
-    const name = prompt("Project Name:");
-    const description = prompt("Description:");
-    if (name) {
-      await createProject({ variables: { name, description } });
-      refetch();
-    }
+  const handleSaveProject = async (project: { name: string; description: string }) => {
+    await createProject({ variables: { name: project.name, description: project.description } });
+    refetch();
   };
 
   if (loading) return <div className="main-content">Loading projects...</div>;
@@ -58,7 +56,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = () => {
             Track and manage your active project portfolio.
           </p>
         </div>
-        <button className="btn-primary" onClick={handleCreateProject}>
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
           <FolderOpen size={18} /> New Project
         </button>
       </div>
@@ -209,6 +207,12 @@ const ProjectsView: React.FC<ProjectsViewProps> = () => {
           );
         })}
       </div>
+
+      <ProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveProject}
+      />
     </div>
   );
 };
