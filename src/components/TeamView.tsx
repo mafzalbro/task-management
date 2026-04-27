@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Mail, MoreHorizontal } from "lucide-react";
 import { useQuery } from "@apollo/client";
 import { GET_TEAM } from "../graphql/operations";
+import InviteModal from "./InviteModal";
 
 const STATUS_COLORS: Record<string, string> = {
   online: "var(--success)",
@@ -12,7 +13,13 @@ const STATUS_COLORS: Record<string, string> = {
 
 const TeamView: React.FC = () => {
   const { data, loading } = useQuery(GET_TEAM);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const users = data?.users || [];
+
+  const handleInvite = (member: { email: string; name: string }) => {
+    console.log("Inviting member:", member);
+    // In a real app, call a mutation here
+  };
 
   if (loading) return <div className="main-content">Loading team...</div>;
 
@@ -43,7 +50,7 @@ const TeamView: React.FC = () => {
             Collaborate with your project team members.
           </p>
         </div>
-        <button className="btn-primary">+ Invite Member</button>
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>+ Invite Member</button>
       </div>
 
       <div className="stats-grid" style={{ marginBottom: "40px" }}>
@@ -179,6 +186,12 @@ const TeamView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      <InviteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onInvite={handleInvite}
+      />
     </div>
   );
 };
