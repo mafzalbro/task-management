@@ -94,36 +94,35 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
               fontWeight: 500,
             }}
           >
-            Get insights into your project performance.
+            Real-time insights driven by Nexus Core.
           </p>
         </div>
-        <button className="btn-secondary">
-          <Download size={16} /> Export PDF
+        <button className="btn-secondary" onClick={() => window.print()}>
+          <Download size={16} /> Print Report
         </button>
       </div>
 
-      {/* KPI Row */}
       <div className="stats-grid" style={{ marginBottom: "32px" }}>
         {[
           {
             label: "Completion Rate",
             value: `${completionRate}%`,
-            trend: "+8%",
+            trend: "Live",
             good: true,
           },
           {
             label: "Total Tasks",
             value: tasks.length,
-            trend: "+3",
+            trend: "Updated",
             good: true,
           },
           {
-            label: "High Priority",
-            value: priorityData[0].value,
-            trend: "-1",
-            good: false,
+            label: "Active Projects",
+            value: Array.from(new Set(tasks.map(t => t.projectId))).length,
+            trend: "Global",
+            good: true,
           },
-          { label: "Avg. Due (days)", value: "4.2", trend: "-0.5", good: true },
+          { label: "High Priority", value: priorityData[0].value, trend: "Urgent", good: false },
         ].map((k, i) => (
           <div key={i} className="stat-card" style={{ padding: "24px" }}>
             <p
@@ -158,17 +157,15 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
                 gap: "4px",
               }}
             >
-              <TrendingUp size={13} /> {k.trend} vs last week
+              <TrendingUp size={13} /> {k.trend} status
             </p>
           </div>
         ))}
       </div>
 
-      {/* Charts Grid */}
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}
       >
-        {/* Bar Chart */}
         <div className="stat-card" style={{ padding: "32px" }}>
           <h3
             style={{ fontSize: "17px", fontWeight: 700, marginBottom: "4px" }}
@@ -183,7 +180,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
               marginBottom: "28px",
             }}
           >
-            Distribution across workflow stages
+            Live distribution across workflow stages
           </p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={statusData} margin={{ left: -20 }}>
@@ -208,15 +205,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
                 tickLine={false}
                 tick={{ fontSize: 12, fill: "var(--text-muted)" }}
               />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: "var(--radius-md)",
-                  border: "none",
-                  boxShadow: "var(--shadow-lg)",
-                  fontSize: "13px",
-                }}
-                cursor={{ fill: "var(--bg-subtle)" }}
-              />
+              <Tooltip />
               <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={36}>
                 {statusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -226,7 +215,6 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart */}
         <div className="stat-card" style={{ padding: "32px" }}>
           <h3
             style={{ fontSize: "17px", fontWeight: 700, marginBottom: "4px" }}
@@ -258,14 +246,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks }) => {
                   <Cell key={`c-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  borderRadius: "var(--radius-md)",
-                  border: "none",
-                  boxShadow: "var(--shadow-lg)",
-                  fontSize: "13px",
-                }}
-              />
+              <Tooltip />
               <Legend
                 iconType="circle"
                 iconSize={10}

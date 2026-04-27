@@ -26,6 +26,29 @@ export const typeDefs = `#graphql
     updatedAt: String!
     auditLogs: [AuditLog]
     notes: [Note]
+    project: Project
+    assignee: User
+  }
+
+  type Project {
+    id: ID!
+    name: String!
+    description: String
+    ownerId: String!
+    teamIds: [String]
+    createdAt: String!
+    updatedAt: String!
+    tasks: [Task]
+    members: [User]
+  }
+
+  type User {
+    id: ID!
+    email: String!
+    name: String!
+    avatarUrl: String
+    auth0Id: String!
+    createdAt: String!
   }
 
   type AuditLog {
@@ -53,6 +76,10 @@ export const typeDefs = `#graphql
   type Query {
     tasks(projectId: String): [Task]
     task(id: ID!): Task
+    projects: [Project]
+    project(id: ID!): Project
+    users: [User]
+    me: User
     notes(projectId: String, taskId: String): [Note]
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
   }
@@ -78,6 +105,11 @@ export const typeDefs = `#graphql
 
     deleteTask(id: ID!): Boolean
 
+    createProject(
+      name: String!
+      description: String
+    ): Project
+
     createNote(
       title: String!
       content: String!
@@ -87,11 +119,14 @@ export const typeDefs = `#graphql
 
     updateNote(id: ID!, title: String, content: String): Note
     deleteNote(id: ID!): Boolean
+
+    syncUser(email: String!, name: String!, avatarUrl: String): User
   }
 
   type Subscription {
     taskCreated(projectId: String): Task
     taskUpdated(projectId: String): Task
+    projectCreated: Project
     noteCreated(projectId: String, taskId: String): Note
   }
 `;
