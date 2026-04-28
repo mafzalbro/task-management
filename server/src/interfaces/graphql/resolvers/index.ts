@@ -17,8 +17,11 @@ const updateTaskUC = new UpdateTaskUseCase(taskRepository);
 
 export const resolvers = {
   Query: {
-    tasks: (_: any, { projectId }: any) => {
-      const filter = projectId ? { projectId } : {};
+    tasks: (_: any, { projectId, status, priority }: any) => {
+      const filter: any = {};
+      if (projectId) filter.projectId = projectId;
+      if (status) filter.status = status;
+      if (priority) filter.priority = priority;
       return getTasksUC.execute(filter);
     },
     task: (_: any, { id }: any) => {
@@ -31,7 +34,7 @@ export const resolvers = {
       return projectRepository.findById(id);
     },
     users: () => {
-      return (userRepository as any).findAll();
+      return userRepository.findAll();
     },
     me: (_: any, __: any, context: any) => {
       if (!context.userId || context.userId === 'guest-user') return null;
@@ -45,6 +48,22 @@ export const resolvers = {
     },
     auditLogs: (_: any, { entityType, entityId }: any) => {
       return auditLogRepository.findByEntity(entityType, entityId);
+    },
+    projectAnalytics: async (_: any, { projectId }: any) => {
+      const tasks = await taskRepository.findAll({ projectId });
+      const analytics = {
+        totalTasks: tasks.length,
+        completedTasks: tasks.filter(t => t.status === 'COMPLETED').length,
+        inProgressTasks: tasks.filter(t => t.status === 'IN_PROGRESS').length,
+        todoTasks: tasks.filter(t => t.status === 'TODO').length,
+        reviewTasks: tasks.filter(t => t.status === 'REVIEW').length,
+        priorityDistribution: {
+          low: tasks.filter(t => t.priority === 'LOW').length,
+          medium: tasks.filter(t => t.priority === 'MEDIUM').length,
+          high: tasks.filter(t => t.priority === 'HIGH').length,
+        }
+      };
+      return analytics;
     }
   },
   Task: {
@@ -59,7 +78,7 @@ export const resolvers = {
     },
     assignee: (parent: any) => {
       if (!parent.assigneeId) return null;
-      return userRepository.findById(parent.assigneeId);
+      return userRepository.findByAuth0Id(parent.assigneeId);
     }
   },
   Project: {
@@ -68,7 +87,7 @@ export const resolvers = {
     },
     members: async (parent: any) => {
       if (!parent.teamIds) return [];
-      const users = await Promise.all(parent.teamIds.map((id: string) => userRepository.findById(id)));
+      const users = await Promise.all(parent.teamIds.map((id: string) => userRepository.findByAuth0Id(id)));
       return users.filter(u => u !== null);
     }
   },

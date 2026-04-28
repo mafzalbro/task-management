@@ -18,5 +18,6 @@ export interface IUserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findByAuth0Id(auth0Id: string): Promise<User | null>;
+  findAll(): Promise<User[]>;
   create(user: Partial<User>): Promise<User>;
 }

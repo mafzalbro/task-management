@@ -73,8 +73,23 @@ export const typeDefs = `#graphql
     updatedAt: String!
   }
 
+  type Analytics {
+    totalTasks: Int!
+    completedTasks: Int!
+    inProgressTasks: Int!
+    todoTasks: Int!
+    reviewTasks: Int!
+    priorityDistribution: PriorityDistribution!
+  }
+
+  type PriorityDistribution {
+    low: Int!
+    medium: Int!
+    high: Int!
+  }
+
   type Query {
-    tasks(projectId: String): [Task]
+    tasks(projectId: String, status: TaskStatus, priority: TaskPriority): [Task]
     task(id: ID!): Task
     projects: [Project]
     project(id: ID!): Project
@@ -82,6 +97,7 @@ export const typeDefs = `#graphql
     me: User
     notes(projectId: String, taskId: String): [Note]
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
+    projectAnalytics(projectId: String!): Analytics
   }
 
   type Mutation {

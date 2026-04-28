@@ -19,7 +19,7 @@ import { GET_TASKS, CREATE_TASK, UPDATE_TASK, TASK_CREATED_SUBSCRIPTION } from "
 const initialSettings = {
   userName: "Alex Rivera",
   userRole: "Product Designer",
-  userEmail: "alex@taskmaster.pro",
+  userEmail: "alex@zenith.pro",
   primaryColor: "#4F46E5",
   density: "Comfortable",
 };

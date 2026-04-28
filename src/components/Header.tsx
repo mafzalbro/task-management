@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
             fontWeight: 500,
           }}
         >
-          TaskMaster Pro &rsaquo;{" "}
+          Zenith Workspace &rsaquo;{" "}
           <span style={{ color: "var(--primary)", fontWeight: 600 }}>
             {title}
           </span>

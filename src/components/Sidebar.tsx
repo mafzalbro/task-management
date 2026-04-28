@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 lineHeight: 1.2,
               }}
             >
-              TaskMaster
+              Zenith
             </div>
             <div
               style={{
