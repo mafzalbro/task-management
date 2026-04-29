@@ -14,7 +14,12 @@ import useLocalStorage from "./hooks/useLocalStorage";
 import type { Post } from "./types";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useQuery, useMutation, useSubscription } from "@apollo/client";
-import { GET_TASKS, CREATE_TASK, UPDATE_TASK, TASK_CREATED_SUBSCRIPTION } from "./graphql/operations";
+import {
+  GET_TASKS,
+  CREATE_TASK,
+  UPDATE_TASK,
+  TASK_CREATED_SUBSCRIPTION,
+} from "./graphql/operations";
 
 const initialSettings = {
   userName: "Alex Rivera",
@@ -51,7 +56,9 @@ function App() {
   const [updateTask] = useMutation(UPDATE_TASK);
 
   useSubscription(TASK_CREATED_SUBSCRIPTION, {
-    onData: () => { refetch(); }
+    onData: () => {
+      refetch();
+    },
   });
 
   const [settings, setSettings] = useLocalStorage(
@@ -63,12 +70,20 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
-  const tasks: Post[] = data?.tasks?.map((t: any) => ({
-    ...t,
-    assignee: t.assigneeId || 'Unassigned',
-    status: t.status === 'TODO' ? 'To Do' : t.status === 'IN_PROGRESS' ? 'In Progress' : t.status === 'REVIEW' ? 'Review' : 'Completed',
-    priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase()
-  })) || [];
+  const tasks: Post[] =
+    data?.tasks?.map((t: any) => ({
+      ...t,
+      assignee: t.assigneeId || "Unassigned",
+      status:
+        t.status === "TODO"
+          ? "To Do"
+          : t.status === "IN_PROGRESS"
+            ? "In Progress"
+            : t.status === "REVIEW"
+              ? "Review"
+              : "Completed",
+      priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase(),
+    })) || [];
 
   // Apply Theme Color to CSS Variable
   useEffect(() => {
@@ -134,19 +149,19 @@ function App() {
           id: task.id,
           title: task.title,
           description: task.description,
-          status: task.status.replace(' ', '_').toUpperCase(),
-          priority: task.priority.toUpperCase()
-        }
+          status: task.status.replace(" ", "_").toUpperCase(),
+          priority: task.priority.toUpperCase(),
+        },
       });
     } else {
       await createTask({
         variables: {
           title: task.title,
           description: task.description,
-          projectId: task.projectId || 'PJ1',
-          status: task.status.replace(' ', '_').toUpperCase(),
-          priority: task.priority.toUpperCase()
-        }
+          projectId: task.projectId || "PJ1",
+          status: task.status.replace(" ", "").toUpperCase(),
+          priority: task.priority.toUpperCase(),
+        },
       });
     }
     refetch();
@@ -157,8 +172,8 @@ function App() {
     await updateTask({
       variables: {
         id,
-        status: status.replace(' ', '_').toUpperCase()
-      }
+        status: status.replace(" ", "_").toUpperCase(),
+      },
     });
     refetch();
   };
