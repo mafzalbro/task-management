@@ -107,7 +107,7 @@ function App() {
 
   const tasks: Post[] = data?.tasks?.map((t: any) => ({
     ...t,
-    assignee: t.assigneeId || 'Unassigned',
+    assignee: t.assignee?.name || t.assigneeId || 'Unassigned',
     status: mapStatusToUI(t.status),
     priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase()
   })) || [];
@@ -169,9 +169,13 @@ function App() {
     setIsModalOpen(true);
   };
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      await deleteTask({ variables: { id } });
-      refetch();
+    try {
+      if (window.confirm('Are you sure you want to delete this task?')) {
+        await deleteTask({ variables: { id } });
+        refetch();
+      }
+    } catch (err) {
+      console.error('Delete Error:', err);
     }
   };
 

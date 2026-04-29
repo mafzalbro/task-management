@@ -93,8 +93,9 @@ export const resolvers = {
   },
   Mutation: {
     createTask: async (_: any, args: any, context: any) => {
-      const userId = context.userId || 'system-user';
-      const task = await createTaskUC.execute({ ...args, creatorId: userId });
+      try {
+        const userId = context.userId || 'system-user';
+        const task = await createTaskUC.execute({ ...args, creatorId: userId });
 
       await auditLogRepository.create({
         entityType: 'TASK',
@@ -104,13 +105,18 @@ export const resolvers = {
         newData: task
       });
 
-      pubsub.publish('TASK_CREATED', { taskCreated: task });
-      return task;
+        pubsub.publish('TASK_CREATED', { taskCreated: task });
+        return task;
+      } catch (err) {
+        console.error('[Resolver Error] createTask:', err);
+        throw err;
+      }
     },
     updateTask: async (_: any, { id, ...updates }: any, context: any) => {
-      const userId = context.userId || 'system-user';
-      const oldTask = await taskRepository.findById(id);
-      const task = await updateTaskUC.execute(id, updates);
+      try {
+        const userId = context.userId || 'system-user';
+        const oldTask = await taskRepository.findById(id);
+        const task = await updateTaskUC.execute(id, updates);
 
       await auditLogRepository.create({
         entityType: 'TASK',
@@ -121,8 +127,12 @@ export const resolvers = {
         newData: task
       });
 
-      pubsub.publish('TASK_UPDATED', { taskUpdated: task });
-      return task;
+        pubsub.publish('TASK_UPDATED', { taskUpdated: task });
+        return task;
+      } catch (err) {
+        console.error('[Resolver Error] updateTask:', err);
+        throw err;
+      }
     },
     deleteTask: async (_: any, { id }: any, context: any) => {
       const userId = context.userId || 'system-user';

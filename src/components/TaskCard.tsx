@@ -226,7 +226,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               fontWeight: 800,
             }}
           >
-            {task.assignee[0]}
+            {task.assignee ? task.assignee[0] : '?'}
           </div>
           <span
             style={{
@@ -235,7 +235,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               fontWeight: 600,
             }}
           >
-            {task.assignee}
+            {task.assignee || 'Unassigned'}
           </span>
         </div>
 

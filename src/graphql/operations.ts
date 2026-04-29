@@ -11,6 +11,10 @@ export const GET_TASKS = gql`
       dueDate
       projectId
       assigneeId
+      assignee {
+        id
+        name
+      }
       creatorId
       createdAt
     }
