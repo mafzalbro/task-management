@@ -28,7 +28,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [status, setStatus] = useState<TaskStatus>("To Do");
   const [priority, setPriority] = useState<TaskPriority>("Medium");
   const [dueDate, setDueDate] = useState("");
-  const [assignee, setAssignee] = useState("");
+  const [assigneeId, setAssigneeId] = useState("");
   const [projectId, setProjectId] = useState("");
 
   useEffect(() => {
@@ -37,16 +37,16 @@ const TaskModal: React.FC<TaskModalProps> = ({
       setDescription(editTask.description);
       setStatus(editTask.status);
       setPriority(editTask.priority);
-      setDueDate(editTask.dueDate);
-      setAssignee(editTask.assignee);
-      setProjectId(editTask.projectId);
+      setDueDate(editTask.dueDate || "");
+      setAssigneeId(editTask.assigneeId || "");
+      setProjectId(editTask.projectId || "");
     } else {
       setTitle("");
       setDescription("");
       setStatus("To Do");
       setPriority("Medium");
       setDueDate(new Date().toISOString().split("T")[0]);
-      setAssignee(team[0]?.name || "");
+      setAssigneeId(team[0]?.id || "");
       setProjectId(projects[0]?.id || "");
     }
   }, [editTask, isOpen, projects, team]);
@@ -63,7 +63,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
       priority,
       dueDate,
       projectId,
-      assignee,
+      assigneeId,
+      assignee: team.find((u: any) => u.id === assigneeId)?.name || 'Unassigned'
     });
     onClose();
   };
@@ -146,10 +147,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
           <div className="form-group">
             <label className="form-label">Assignee</label>
-            <select className="form-input" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+            <select className="form-input" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
                <option value="" disabled>Select Assignee</option>
                {team.map((m: any) => (
-                  <option key={m.id} value={m.name}>{m.name}</option>
+                  <option key={m.id} value={m.id}>{m.name}</option>
                ))}
             </select>
           </div>

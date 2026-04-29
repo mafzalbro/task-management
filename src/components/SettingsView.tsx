@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { User, Bell, Palette, Shield, Save, Check } from "lucide-react";
+import { useToast } from "../contexts/ToastContext";
 
 interface SettingsViewProps {
   settings: any;
@@ -20,17 +21,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   onUpdateSettings,
 }) => {
+  const { showToast } = useToast();
   const [localSettings, setLocalSettings] = useState(settings);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     onUpdateSettings(localSettings);
     setSaved(true);
+    showToast('Settings saved successfully', 'success');
     setTimeout(() => setSaved(false), 2000);
   };
 
   const update = (key: string, val: any) => {
-    setLocalSettings({ ...localSettings, [key]: val });
+    const newSettings = { ...localSettings, [key]: val };
+    setLocalSettings(newSettings);
+    if (key === 'primaryColor') {
+      onUpdateSettings(newSettings);
+    }
   };
 
   return (

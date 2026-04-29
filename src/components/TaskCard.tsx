@@ -226,7 +226,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               fontWeight: 800,
             }}
           >
-            {task.assignee[0]}
+            {task.assignee ? task.assignee[0] : '?'}
           </div>
           <span
             style={{
@@ -235,7 +235,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               fontWeight: 600,
             }}
           >
-            {task.assignee}
+            {task.assignee || 'Unassigned'}
           </span>
         </div>
 
@@ -249,7 +249,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         >
           <Calendar size={13} />
           <span style={{ fontSize: "12px", fontWeight: 600 }}>
-            {task.dueDate.split("-").slice(1).reverse().join("/")}
+            {task.dueDate ? (task.dueDate.includes('-') ? task.dueDate.split("-").slice(1).reverse().join("/") : task.dueDate) : 'No date'}
           </span>
         </div>
       </div>

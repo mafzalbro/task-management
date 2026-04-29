@@ -5,6 +5,7 @@ import { ApolloProvider } from '@apollo/client';
 import { client } from './apollo-client';
 import './index.css';
 import App from './App.tsx';
+import { ToastProvider } from "./contexts/ToastContext";
 
 const domain = import.meta.env.VITE_AUTH0_DOMAIN || "your-domain.auth0.com";
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || "your-client-id";
@@ -20,7 +21,9 @@ createRoot(document.getElementById('root')!).render(
       }}
     >
       <ApolloProvider client={client}>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </ApolloProvider>
     </Auth0Provider>
   </StrictMode>,

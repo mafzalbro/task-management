@@ -10,10 +10,12 @@ import {
   LogOut,
   Zap,
 } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onUpgrade: () => void;
   userName: string;
   userEmail: string;
 }
@@ -30,9 +32,11 @@ const MAIN_NAV = [
 const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
+  onUpgrade,
   userName,
   userEmail,
 }) => {
+  const { logout } = useAuth0();
   return (
     <aside
       style={{
@@ -80,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 lineHeight: 1.2,
               }}
             >
-              TaskMaster
+              Zenith
             </div>
             <div
               style={{
@@ -98,6 +102,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Workspace pill - Dynamic User */}
       <div style={{ padding: "16px 16px 8px" }}>
         <div
+          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--danger-bg)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           style={{
             display: "flex",
             alignItems: "center",
@@ -243,6 +250,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             Get unlimited private boards & custom fields.
           </p>
           <button
+            onClick={onUpgrade}
             style={{
               width: "100%",
               padding: "8px",
@@ -287,6 +295,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <span style={{ fontSize: "14px", fontWeight: 600 }}>Settings</span>
         </div>
         <div
+          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
           style={{
             display: "flex",
             alignItems: "center",
@@ -296,6 +305,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             cursor: "pointer",
             color: "var(--danger)",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--danger-bg)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
           <LogOut size={18} />
           <span style={{ fontSize: "14px", fontWeight: 600 }}>Logout</span>

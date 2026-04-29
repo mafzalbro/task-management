@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import type { Post } from "../types";
-import { FolderOpen, MoreHorizontal, Users, CheckCircle2 } from "lucide-react";
+import { FolderOpen, MoreHorizontal, Users, CheckCircle2, Trash2 } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_PROJECTS, CREATE_PROJECT } from "../graphql/operations";
+import { GET_PROJECTS, CREATE_PROJECT, DELETE_PROJECT } from "../graphql/operations";
 import ProjectModal from "./ProjectModal";
+import { useToast } from "../contexts/ToastContext";
 
 interface ProjectsViewProps {
   tasks: Post[];
@@ -16,15 +17,27 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 const ProjectsView: React.FC<ProjectsViewProps> = () => {
+  const { showToast } = useToast();
   const { data, loading, refetch } = useQuery(GET_PROJECTS);
   const [createProject] = useMutation(CREATE_PROJECT);
+  const [deleteProject] = useMutation(DELETE_PROJECT);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const projects = data?.projects || [];
 
   const handleSaveProject = async (project: { name: string; description: string }) => {
     await createProject({ variables: { name: project.name, description: project.description } });
     refetch();
+    showToast('Project created successfully', 'success');
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this project? All associated tasks will remain but the project link will be lost.')) {
+      await deleteProject({ variables: { id } });
+      refetch();
+      showToast('Project deleted successfully', 'success');
+    }
   };
 
   if (loading) return <div className="main-content">Loading projects...</div>;
@@ -104,9 +117,56 @@ const ProjectsView: React.FC<ProjectsViewProps> = () => {
                 >
                   <FolderOpen size={24} />
                 </div>
-                <button className="icon-btn-ghost">
-                  <MoreHorizontal size={20} />
-                </button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className="icon-btn-ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMenu(activeMenu === project.id ? null : project.id);
+                    }}
+                  >
+                    <MoreHorizontal size={20} />
+                  </button>
+                  {activeMenu === project.id && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: '100%',
+                        background: 'white',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-lg)',
+                        zIndex: 10,
+                        width: '160px',
+                        marginTop: '8px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <button
+                        className="flex items-center gap-2"
+                        style={{
+                          width: '100%',
+                          padding: '10px 16px',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: '#EF4444',
+                          textAlign: 'left',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteProject(project.id);
+                          setActiveMenu(null);
+                        }}
+                      >
+                        <Trash2 size={16} /> Delete Project
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

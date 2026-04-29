@@ -11,9 +11,25 @@ export const GET_TASKS = gql`
       dueDate
       projectId
       assigneeId
+      assignee {
+        id
+        name
+      }
       creatorId
       createdAt
     }
+  }
+`;
+
+export const DELETE_PROJECT = gql`
+  mutation DeleteProject($id: ID!) {
+    deleteProject(id: $id)
+  }
+`;
+
+export const DELETE_TASK = gql`
+  mutation DeleteTask($id: ID!) {
+    deleteTask(id: $id)
   }
 `;
 
@@ -60,8 +76,8 @@ export const CREATE_PROJECT = gql`
 `;
 
 export const CREATE_TASK = gql`
-  mutation CreateTask($title: String!, $projectId: String!, $description: String, $status: TaskStatus, $priority: TaskPriority) {
-    createTask(title: $title, projectId: $projectId, description: $description, status: $status, priority: $priority) {
+  mutation CreateTask($title: String!, $projectId: String!, $description: String, $status: TaskStatus, $priority: TaskPriority, $dueDate: String, $assigneeId: String) {
+    createTask(title: $title, projectId: $projectId, description: $description, status: $status, priority: $priority, dueDate: $dueDate, assigneeId: $assigneeId) {
       id
       title
       status
@@ -70,8 +86,8 @@ export const CREATE_TASK = gql`
 `;
 
 export const UPDATE_TASK = gql`
-  mutation UpdateTask($id: ID!, $status: TaskStatus, $priority: TaskPriority, $title: String, $description: String) {
-    updateTask(id: $id, status: $status, priority: $priority, title: $title, description: $description) {
+  mutation UpdateTask($id: ID!, $status: TaskStatus, $priority: TaskPriority, $title: String, $description: String, $dueDate: String, $assigneeId: String) {
+    updateTask(id: $id, status: $status, priority: $priority, title: $title, description: $description, dueDate: $dueDate, assigneeId: $assigneeId) {
       id
       title
       status

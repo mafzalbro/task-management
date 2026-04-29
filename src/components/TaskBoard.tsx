@@ -18,12 +18,32 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   onDelete,
   onMove,
 }) => {
+  const [localSearch, setLocalSearch] = React.useState("");
   const columns: Post["status"][] = [
     "To Do",
     "In Progress",
     "Review",
     "Completed",
   ];
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    e.currentTarget.classList.add("board-column-drag-over");
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove("board-column-drag-over");
+  };
+
+  const handleDrop = (e: React.DragEvent, status: Post["status"]) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("board-column-drag-over");
+    const taskId = e.dataTransfer.getData("taskId");
+    if (taskId) {
+      onMove(taskId, status);
+    }
+  };
 
   return (
     <div className="main-content">
@@ -56,14 +76,19 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 <input
                     type="text"
                     placeholder="Quick search..."
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                     style={{
                         padding: '8px 12px 8px 36px',
                         fontSize: '13px',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--border-light)',
                         background: 'white',
-                        width: '200px'
+                        width: '200px',
+                        outline: 'none',
                     }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-light)'}
                 />
             </div>
             <button className="btn-primary" onClick={onAdd}>
@@ -72,11 +97,21 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
         </div>
       </div>
 
-      <div className="board-container">
+      <div className="board-grid">
         {columns.map((status) => {
-          const colTasks = tasks.filter((t) => t.status === status);
+          const colTasks = tasks.filter((t) =>
+            t.status === status &&
+            (t.title.toLowerCase().includes(localSearch.toLowerCase()) ||
+             t.description.toLowerCase().includes(localSearch.toLowerCase()))
+          );
           return (
-            <div key={status} className="board-column">
+            <div
+              key={status}
+              className="board-column"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, status)}
+            >
               <div className="column-header">
                 <div className="flex items-center gap-2">
                   <span className="column-title">{status}</span>

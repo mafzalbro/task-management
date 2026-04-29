@@ -15,8 +15,14 @@ export class MongoUserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    const doc = await UserModel.findById(id);
-    return doc ? this.mapToEntity(doc) : null;
+    if (!id || id === 'guest-user' || id === 'system-user') return null;
+    try {
+      const doc = await UserModel.findById(id);
+      return doc ? this.mapToEntity(doc) : null;
+    } catch (err) {
+      // If it's a cast error, it might be an Auth0 ID being passed to findById
+      return this.findByAuth0Id(id);
+    }
   }
 
   async findAll(): Promise<User[]> {

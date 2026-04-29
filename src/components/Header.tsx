@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Bell, Plus, ChevronDown } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface HeaderProps {
   title: string;
@@ -16,17 +17,10 @@ const Header: React.FC<HeaderProps> = ({
   onAddTask,
   userName,
 }) => {
+  const { logout } = useAuth0();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handleFocus = () => inputRef.current?.focus();
-    window.addEventListener("focus-search", handleFocus);
-    return () => window.removeEventListener("focus-search", handleFocus);
-  }, []);
-
-  const notifications = [
+  const [notifications, setNotifications] = useState([
     {
       id: 1,
       icon: "🎯",
@@ -55,7 +49,15 @@ const Header: React.FC<HeaderProps> = ({
       time: "3h ago",
       unread: false,
     },
-  ];
+  ]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleFocus = () => inputRef.current?.focus();
+    window.addEventListener("focus-search", handleFocus);
+    return () => window.removeEventListener("focus-search", handleFocus);
+  }, []);
+
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -97,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
             fontWeight: 500,
           }}
         >
-          TaskMaster Pro &rsaquo;{" "}
+          Zenith Workspace &rsaquo;{" "}
           <span style={{ color: "var(--primary)", fontWeight: 600 }}>
             {title}
           </span>
@@ -269,16 +271,30 @@ const Header: React.FC<HeaderProps> = ({
                 <span style={{ fontWeight: 800, fontSize: "15px" }}>
                   Notifications
                 </span>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--primary)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  Mark all as read
-                </span>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <span
+                    onClick={() => setNotifications(notifications.map(n => ({ ...n, unread: false })))}
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--primary)",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Mark all as read
+                  </span>
+                  <span
+                    onClick={() => setNotifications([])}
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--danger)",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Clear all
+                  </span>
+                </div>
               </div>
               <div style={{ maxHeight: "400px", overflowY: "auto" }}>
                 {notifications.map((n) => (
@@ -429,6 +445,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex-col gap-1">
                 <div
+                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
                   style={{
                     padding: "10px 12px",
                     borderRadius: "8px",
