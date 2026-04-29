@@ -1,4 +1,4 @@
-import { Task, Project, User } from "../entities/Task.js";
+import { Task, Project, User } from '../entities/Task.js';
 
 export interface ITaskRepository {
   findById(id: string): Promise<Task | null>;

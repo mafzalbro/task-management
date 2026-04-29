@@ -1,6 +1,6 @@
-import { IUserRepository } from "../../core/repositories/Interfaces.js";
-import { User } from "../../core/entities/Task.js";
-import { UserModel } from "../database/UserModel.js";
+import { IUserRepository } from '../../core/repositories/Interfaces.js';
+import { User } from '../../core/entities/Task.js';
+import { UserModel } from '../database/UserModel.js';
 
 export class MongoUserRepository implements IUserRepository {
   private mapToEntity(doc: any): User {
@@ -15,7 +15,7 @@ export class MongoUserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    if (!id || id === "guest-user" || id === "system-user") return null;
+    if (!id || id === 'guest-user' || id === 'system-user') return null;
     try {
       const doc = await UserModel.findById(id);
       return doc ? this.mapToEntity(doc) : null;
@@ -27,7 +27,7 @@ export class MongoUserRepository implements IUserRepository {
 
   async findAll(): Promise<User[]> {
     const docs = await UserModel.find().sort({ name: 1 });
-    return docs.map((doc) => this.mapToEntity(doc));
+    return docs.map(doc => this.mapToEntity(doc));
   }
 
   async findByEmail(email: string): Promise<User | null> {

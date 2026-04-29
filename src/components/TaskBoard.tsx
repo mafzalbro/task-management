@@ -25,6 +25,25 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     "Completed",
   ];
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    e.currentTarget.classList.add("board-column-drag-over");
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove("board-column-drag-over");
+  };
+
+  const handleDrop = (e: React.DragEvent, status: Post["status"]) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("board-column-drag-over");
+    const taskId = e.dataTransfer.getData("taskId");
+    if (taskId) {
+      onMove(taskId, status);
+    }
+  };
+
   return (
     <div className="main-content">
       <div
@@ -72,11 +91,17 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
         </div>
       </div>
 
-      <div className="board-container">
+      <div className="board-grid">
         {columns.map((status) => {
           const colTasks = tasks.filter((t) => t.status === status);
           return (
-            <div key={status} className="board-column">
+            <div
+              key={status}
+              className="board-column"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, status)}
+            >
               <div className="column-header">
                 <div className="flex items-center gap-2">
                   <span className="column-title">{status}</span>
