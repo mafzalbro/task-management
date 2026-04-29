@@ -33,7 +33,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const update = (key: string, val: any) => {
-    setLocalSettings({ ...localSettings, [key]: val });
+    const newSettings = { ...localSettings, [key]: val };
+    setLocalSettings(newSettings);
+    if (key === 'primaryColor') {
+      onUpdateSettings(newSettings);
+    }
   };
 
   return (

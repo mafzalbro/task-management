@@ -85,10 +85,30 @@ function App() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
+  const mapStatusToUI = (status: string): Post["status"] => {
+    switch (status) {
+      case "TODO": return "To Do";
+      case "IN_PROGRESS": return "In Progress";
+      case "REVIEW": return "Review";
+      case "COMPLETED": return "Completed";
+      default: return "To Do";
+    }
+  };
+
+  const mapUIToStatus = (uiStatus: Post["status"]): string => {
+    switch (uiStatus) {
+      case "To Do": return "TODO";
+      case "In Progress": return "IN_PROGRESS";
+      case "Review": return "REVIEW";
+      case "Completed": return "COMPLETED";
+      default: return "TODO";
+    }
+  };
+
   const tasks: Post[] = data?.tasks?.map((t: any) => ({
     ...t,
     assignee: t.assigneeId || 'Unassigned',
-    status: t.status === 'TODO' ? 'To Do' : t.status === 'IN_PROGRESS' ? 'In Progress' : t.status === 'REVIEW' ? 'Review' : 'Completed',
+    status: mapStatusToUI(t.status),
     priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase()
   })) || [];
 
@@ -163,7 +183,7 @@ function App() {
             id: task.id,
             title: task.title,
             description: task.description,
-            status: task.status.replace(' ', '_').toUpperCase(),
+            status: mapUIToStatus(task.status),
             priority: task.priority.toUpperCase()
           }
         });
@@ -173,7 +193,7 @@ function App() {
             title: task.title,
             description: task.description,
             projectId: task.projectId || 'PJ1',
-            status: task.status.replace(' ', '_').toUpperCase(),
+            status: mapUIToStatus(task.status),
             priority: task.priority.toUpperCase()
           }
         });
@@ -189,7 +209,7 @@ function App() {
     await updateTask({
       variables: {
         id,
-        status: status.replace(' ', '_').toUpperCase()
+        status: mapUIToStatus(status)
       }
     });
     if (status === "Completed") {
