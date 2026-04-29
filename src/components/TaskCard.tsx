@@ -249,7 +249,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         >
           <Calendar size={13} />
           <span style={{ fontSize: "12px", fontWeight: 600 }}>
-            {task.dueDate ? task.dueDate.split("-").slice(1).reverse().join("/") : 'No date'}
+            {task.dueDate ? (task.dueDate.includes('-') ? task.dueDate.split("-").slice(1).reverse().join("/") : task.dueDate) : 'No date'}
           </span>
         </div>
       </div>

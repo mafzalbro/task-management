@@ -106,6 +106,7 @@ export const typeDefs = `#graphql
       description: String
       status: TaskStatus
       priority: TaskPriority
+      dueDate: String
       projectId: String!
       assigneeId: String
     ): Task
@@ -116,6 +117,7 @@ export const typeDefs = `#graphql
       description: String
       status: TaskStatus
       priority: TaskPriority
+      dueDate: String
       assigneeId: String
     ): Task
 

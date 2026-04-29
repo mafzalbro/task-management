@@ -188,7 +188,9 @@ function App() {
             title: task.title,
             description: task.description,
             status: mapUIToStatus(task.status),
-            priority: task.priority.toUpperCase()
+            priority: task.priority.toUpperCase(),
+            dueDate: task.dueDate,
+            assigneeId: task.assigneeId
           }
         });
       } else {
@@ -198,7 +200,9 @@ function App() {
             description: task.description,
             projectId: task.projectId || 'PJ1',
             status: mapUIToStatus(task.status),
-            priority: task.priority.toUpperCase()
+            priority: task.priority.toUpperCase(),
+            dueDate: task.dueDate,
+            assigneeId: task.assigneeId
           }
         });
       }
