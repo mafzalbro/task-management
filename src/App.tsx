@@ -8,13 +8,17 @@ import TaskModal from "./components/TaskModal";
 import ProjectsView from "./components/ProjectsView";
 import CalendarView from "./components/CalendarView";
 import TeamView from "./components/TeamView";
+import CommandPalette from "./components/modals/CommandPalette";
+import UpgradeModal from "./components/modals/UpgradeModal";
 import ReportsView from "./components/ReportsView";
 import SettingsView from "./components/SettingsView";
 import useLocalStorage from "./hooks/useLocalStorage";
 import type { Post } from "./types";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useQuery, useMutation, useSubscription } from "@apollo/client";
-import { GET_TASKS, CREATE_TASK, UPDATE_TASK, TASK_CREATED_SUBSCRIPTION } from "./graphql/operations";
+import { GET_TASKS, CREATE_TASK, UPDATE_TASK, DELETE_TASK, TASK_CREATED_SUBSCRIPTION } from "./graphql/operations";
+import { useToast } from "./contexts/ToastContext";
+import confetti from "canvas-confetti";
 
 const initialSettings = {
   userName: "Alex Rivera",
@@ -46,12 +50,28 @@ const pageVariants: Variants = {
 };
 
 function App() {
-  const { data, loading, refetch } = useQuery(GET_TASKS);
-  const [createTask] = useMutation(CREATE_TASK);
-  const [updateTask] = useMutation(UPDATE_TASK);
+  const { showToast } = useToast();
+  const { data, loading, refetch, error: queryError } = useQuery(GET_TASKS, {
+    onError: (err) => showToast(`Failed to load tasks: ${err.message}`, 'error')
+  });
+  const [createTask] = useMutation(CREATE_TASK, {
+    onCompleted: () => showToast('Task created successfully', 'success'),
+    onError: (err) => showToast(`Failed to create task: ${err.message}`, 'error')
+  });
+  const [updateTask] = useMutation(UPDATE_TASK, {
+    onCompleted: () => showToast('Task updated successfully', 'success'),
+    onError: (err) => showToast(`Failed to update task: ${err.message}`, 'error')
+  });
+  const [deleteTask] = useMutation(DELETE_TASK, {
+    onCompleted: () => showToast('Task deleted successfully', 'success'),
+    onError: (err) => showToast(`Failed to delete task: ${err.message}`, 'error')
+  });
 
   useSubscription(TASK_CREATED_SUBSCRIPTION, {
-    onData: () => { refetch(); }
+    onData: () => {
+      showToast('New task detected!', 'info');
+      refetch();
+    }
   });
 
   const [settings, setSettings] = useLocalStorage(
@@ -61,6 +81,8 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
   const tasks: Post[] = data?.tasks?.map((t: any) => ({
@@ -87,7 +109,10 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        window.dispatchEvent(new CustomEvent("focus-search"));
+        setIsCommandPaletteOpen(true);
+      }
+      if (e.key === "Escape") {
+        setIsCommandPaletteOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -123,34 +148,41 @@ function App() {
     setEditTask(task);
     setIsModalOpen(true);
   };
-  const handleDelete = () => {
-    // Implement delete mutation
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      await deleteTask({ variables: { id } });
+      refetch();
+    }
   };
 
   const handleSave = async (task: Post) => {
-    if (editTask) {
-      await updateTask({
-        variables: {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status.replace(' ', '_').toUpperCase(),
-          priority: task.priority.toUpperCase()
-        }
-      });
-    } else {
-      await createTask({
-        variables: {
-          title: task.title,
-          description: task.description,
-          projectId: task.projectId || 'PJ1',
-          status: task.status.replace(' ', '_').toUpperCase(),
-          priority: task.priority.toUpperCase()
-        }
-      });
+    try {
+      if (editTask) {
+        await updateTask({
+          variables: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status.replace(' ', '_').toUpperCase(),
+            priority: task.priority.toUpperCase()
+          }
+        });
+      } else {
+        await createTask({
+          variables: {
+            title: task.title,
+            description: task.description,
+            projectId: task.projectId || 'PJ1',
+            status: task.status.replace(' ', '_').toUpperCase(),
+            priority: task.priority.toUpperCase()
+          }
+        });
+      }
+      refetch();
+      setIsModalOpen(false);
+    } catch (e) {
+      console.error(e);
     }
-    refetch();
-    setIsModalOpen(false);
   };
 
   const updateTaskStatus = async (id: string, status: Post["status"]) => {
@@ -160,6 +192,14 @@ function App() {
         status: status.replace(' ', '_').toUpperCase()
       }
     });
+    if (status === "Completed") {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#4F46E5", "#10B981", "#F59E0B"]
+      });
+    }
     refetch();
   };
 
@@ -231,11 +271,25 @@ function App() {
     }
   };
 
+  const handleCommandSelect = (id: string) => {
+    switch (id) {
+      case 'new-task': openAdd(); break;
+      case 'dashboard': setActiveTab('dashboard'); break;
+      case 'tasks': setActiveTab('tasks'); break;
+      case 'projects': setActiveTab('projects'); break;
+      case 'team': setActiveTab('team'); break;
+      case 'settings': setActiveTab('settings'); break;
+    }
+  };
+
+  const openUpgrade = () => setIsUpgradeModalOpen(true);
+
   return (
     <div className="layout">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        onUpgrade={openUpgrade}
         userName={settings.userName}
         userEmail={settings.userEmail}
       />
@@ -266,6 +320,17 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         editTask={editTask}
+      />
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelect={handleCommandSelect}
+      />
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
       />
     </div>
   );

@@ -17,6 +17,12 @@ export const GET_TASKS = gql`
   }
 `;
 
+export const DELETE_TASK = gql`
+  mutation DeleteTask($id: ID!) {
+    deleteTask(id: $id)
+  }
+`;
+
 export const GET_PROJECTS = gql`
   query GetProjects {
     projects {

@@ -13,16 +13,18 @@
     "@apollo/client": "^3.8.8",
     "@auth0/auth0-react": "^2.16.2",
     "@types/auth0-js": "^9.21.6",
+    "@types/canvas-confetti": "^1.9.0",
     "auth0-js": "^9.32.0",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.35.0",
-    "graphql": "^16.13.2",
-    "graphql-ws": "^6.0.8",
-    "lucide-react": "^0.577.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-is": "^19.2.5",
-    "recharts": "^3.7.0",
+    "framer-motion": "^11.0.0",
+    "graphql": "^16.8.1",
+    "graphql-ws": "^5.14.2",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-is": "^18.2.0",
+    "recharts": "^2.12.0",
     "subscriptions-transport-ws": "^0.11.0",
     "tailwind-merge": "^3.5.0"
   },
@@ -36,8 +38,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "typescript": "~5.3.3",
+    "typescript-eslint": "^7.0.0",
+    "vite": "^5.2.0"
   }
 }

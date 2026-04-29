@@ -18,6 +18,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   onDelete,
   onMove,
 }) => {
+  const [localSearch, setLocalSearch] = React.useState("");
   const columns: Post["status"][] = [
     "To Do",
     "In Progress",
@@ -75,14 +76,19 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 <input
                     type="text"
                     placeholder="Quick search..."
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                     style={{
                         padding: '8px 12px 8px 36px',
                         fontSize: '13px',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--border-light)',
                         background: 'white',
-                        width: '200px'
+                        width: '200px',
+                        outline: 'none',
                     }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-light)'}
                 />
             </div>
             <button className="btn-primary" onClick={onAdd}>
@@ -93,7 +99,11 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
 
       <div className="board-grid">
         {columns.map((status) => {
-          const colTasks = tasks.filter((t) => t.status === status);
+          const colTasks = tasks.filter((t) =>
+            t.status === status &&
+            (t.title.toLowerCase().includes(localSearch.toLowerCase()) ||
+             t.description.toLowerCase().includes(localSearch.toLowerCase()))
+          );
           return (
             <div
               key={status}

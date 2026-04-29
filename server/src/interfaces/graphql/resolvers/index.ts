@@ -143,6 +143,12 @@ export const resolvers = {
       pubsub.publish('PROJECT_CREATED', { projectCreated: project });
       return project;
     },
+    updateProject: (_: any, { id, ...updates }: any) => {
+      return projectRepository.update(id, updates);
+    },
+    deleteProject: (_: any, { id }: any) => {
+      return projectRepository.delete(id);
+    },
     createNote: async (_: any, args: any, context: any) => {
       const userId = context.userId || 'system-user';
       const note = await noteRepository.create({ ...args, creatorId: userId });

@@ -7,6 +7,8 @@ vi.mock('../src/infrastructure/database/ProjectModel.js', () => ({
     findById: vi.fn(),
     find: vi.fn(),
     create: vi.fn(),
+    findByIdAndUpdate: vi.fn(),
+    deleteOne: vi.fn(),
   }
 }));
 
@@ -54,5 +56,31 @@ describe('MongoProjectRepository', () => {
 
     expect(ProjectModel.create).toHaveBeenCalledWith(projectData);
     expect(result.id).toBe('new-id');
+  });
+
+  it('should update a project', async () => {
+    const mockUpdatedProject = {
+      _id: 'proj-1',
+      name: 'Updated Project',
+      ownerId: 'user1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    (ProjectModel.findByIdAndUpdate as any).mockResolvedValueOnce(mockUpdatedProject);
+
+    const result = await repository.update('proj-1', { name: 'Updated Project' });
+
+    expect(ProjectModel.findByIdAndUpdate).toHaveBeenCalledWith('proj-1', { name: 'Updated Project' }, { new: true });
+    expect(result.name).toBe('Updated Project');
+  });
+
+  it('should delete a project', async () => {
+    (ProjectModel.deleteOne as any).mockResolvedValueOnce({ deletedCount: 1 });
+
+    const result = await repository.delete('proj-1');
+
+    expect(ProjectModel.deleteOne).toHaveBeenCalledWith({ _id: 'proj-1' });
+    expect(result).toBe(true);
   });
 });

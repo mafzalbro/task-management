@@ -12,6 +12,8 @@ export interface IProjectRepository {
   findById(id: string): Promise<Project | null>;
   findAll(): Promise<Project[]>;
   create(project: Partial<Project>): Promise<Project>;
+  update(id: string, project: Partial<Project>): Promise<Project>;
+  delete(id: string): Promise<boolean>;
 }
 
 export interface IUserRepository {

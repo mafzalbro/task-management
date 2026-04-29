@@ -126,6 +126,15 @@ export const typeDefs = `#graphql
       description: String
     ): Project
 
+    updateProject(
+      id: ID!
+      name: String
+      description: String
+      teamIds: [String]
+    ): Project
+
+    deleteProject(id: ID!): Boolean
+
     createNote(
       title: String!
       content: String!

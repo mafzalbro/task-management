@@ -380,9 +380,9 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -390,13 +390,16 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding: 40px;
   border-radius: var(--radius-xl);
   width: 600px;
   max-width: 95%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.15);
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Stats */
