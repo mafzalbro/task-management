@@ -25,6 +25,7 @@ export class MongoTaskRepository implements ITaskRepository {
       energyLevel: doc.energyLevel,
       tags: doc.tags,
       sprintId: doc.sprintId,
+      epicId: doc.epicId,
     };
   }
 

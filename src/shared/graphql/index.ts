@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const GET_TASKS = gql`
-  query GetTasks($projectId: String, $parentId: String, $sprintId: String) {
-    tasks(projectId: $projectId, parentId: $parentId, sprintId: $sprintId) {
+  query GetTasks($projectId: String, $parentId: String, $sprintId: String, $epicId: String) {
+    tasks(projectId: $projectId, parentId: $parentId, sprintId: $sprintId, epicId: $epicId) {
       id
       title
       description
@@ -26,6 +26,7 @@ export const GET_TASKS = gql`
       energyLevel
       tags
       sprintId
+      epicId
       subtasks {
         id
         title
@@ -52,6 +53,32 @@ export const GET_SPRINTS = gql`
       }
     }
   }
+`;
+
+export const GET_EPICS = gql`
+    query GetEpics($projectId: String) {
+        epics(projectId: $projectId) {
+            id
+            name
+            description
+            status
+            startDate
+            endDate
+            tasks {
+                id
+                status
+            }
+        }
+    }
+`;
+
+export const CREATE_EPIC = gql`
+    mutation CreateEpic($name: String!, $description: String, $projectId: String!, $startDate: String, $endDate: String) {
+        createEpic(name: $name, description: $description, projectId: $projectId, startDate: $startDate, endDate: $endDate) {
+            id
+            name
+        }
+    }
 `;
 
 export const CREATE_SPRINT = gql`
@@ -237,7 +264,8 @@ export const CREATE_TASK = gql`
     $estimate: Int,
     $energyLevel: EnergyLevel,
     $tags: [String],
-    $sprintId: String
+    $sprintId: String,
+    $epicId: String
   ) {
     createTask(
       title: $title,
@@ -252,7 +280,8 @@ export const CREATE_TASK = gql`
       estimate: $estimate,
       energyLevel: $energyLevel,
       tags: $tags,
-      sprintId: $sprintId
+      sprintId: $sprintId,
+      epicId: $epicId
     ) {
       id
       title
@@ -276,7 +305,8 @@ export const UPDATE_TASK = gql`
     $actualEffort: Int,
     $energyLevel: EnergyLevel,
     $tags: [String],
-    $sprintId: String
+    $sprintId: String,
+    $epicId: String
   ) {
     updateTask(
       id: $id,
@@ -292,7 +322,8 @@ export const UPDATE_TASK = gql`
       actualEffort: $actualEffort,
       energyLevel: $energyLevel,
       tags: $tags,
-      sprintId: $sprintId
+      sprintId: $sprintId,
+      epicId: $epicId
     ) {
       id
       title

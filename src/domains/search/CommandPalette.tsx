@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Command, Zap, CheckCircle, Folder, Users, Settings as SettingsIcon, Plus, Calendar, PieChart, Target } from 'lucide-react';
+import { Search, Command, Zap, CheckCircle, Folder, Users, Settings as SettingsIcon, Plus, Calendar, PieChart, Target, Map } from 'lucide-react';
 import { useQuery } from '@apollo/client';
 import { GET_TASKS, GET_PROJECTS } from '../../shared/graphql';
 
@@ -33,6 +33,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onSele
     { id: 'dashboard', label: 'Overview', icon: Zap, shortcut: 'D', category: 'Navigation' },
     { id: 'tasks', label: 'Task Board', icon: CheckCircle, shortcut: 'T', category: 'Navigation' },
     { id: 'projects-view', label: 'Projects', icon: Folder, shortcut: 'P', category: 'Navigation' },
+    { id: 'roadmap', label: 'Roadmap', icon: Map, shortcut: 'Shift+R', category: 'Navigation' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, shortcut: 'C', category: 'Navigation' },
     { id: 'team', label: 'Team', icon: Users, shortcut: 'M', category: 'Navigation' },
     { id: 'reports', label: 'Reports & Analytics', icon: PieChart, shortcut: 'R', category: 'Navigation' },

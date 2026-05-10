@@ -8,7 +8,8 @@ import {
     Settings,
     Zap,
     Crown,
-    Layers
+    Layers,
+    Map
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onUpgrade, u
     { id: 'dashboard', label: 'Overview', icon: Zap },
     { id: 'tasks', label: 'Task Board', icon: LayoutGrid },
     { id: 'sprints', label: 'Sprints', icon: Layers },
+    { id: 'roadmap', label: 'Roadmap', icon: Map },
     { id: 'projects', label: 'Projects', icon: List },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'team', label: 'Team', icon: Users },

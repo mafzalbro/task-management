@@ -26,6 +26,7 @@ import CommandPalette from "./domains/search/CommandPalette";
 import FocusMode from "./domains/focus/FocusMode";
 
 import SprintsView from "./domains/sprints/SprintsView";
+import RoadmapView from "./domains/roadmaps/RoadmapView";
 
 // Hooks & Providers
 import useLocalStorage from "./shared/hooks";
@@ -62,6 +63,7 @@ const PAGE_TITLES: Record<string, string> = {
   reports: "Reports & Analytics",
   settings: "Settings",
   sprints: "Sprints & Backlog",
+  roadmap: "Product Roadmap",
 };
 
 const pageVariants: Variants = {
@@ -233,7 +235,8 @@ function App() {
             actualEffort: task.actualEffort,
             energyLevel: task.energyLevel?.toUpperCase(),
             tags: task.tags,
-            sprintId: task.sprintId
+            sprintId: task.sprintId,
+            epicId: task.epicId
           }
         });
       } else {
@@ -251,7 +254,8 @@ function App() {
             estimate: task.estimate,
             energyLevel: task.energyLevel?.toUpperCase(),
             tags: task.tags,
-            sprintId: task.sprintId
+            sprintId: task.sprintId,
+            epicId: task.epicId
           }
         });
       }
@@ -345,6 +349,8 @@ function App() {
         );
       case "sprints":
           return <SprintsView projectId="PJ1" />;
+      case "roadmap":
+          return <RoadmapView projectId="PJ1" />;
       default:
         return null;
     }
@@ -371,6 +377,8 @@ function App() {
       case 'reports': setActiveTab('reports'); break;
       case 'settings': setActiveTab('settings'); break;
       case 'sprints': setActiveTab('sprints'); break;
+      case 'roadmap': setActiveTab('roadmap'); break;
+      case 'focus-mode': setIsFocusModeOpen(true); break;
     }
   };
 

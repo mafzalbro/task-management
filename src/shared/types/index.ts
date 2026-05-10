@@ -21,6 +21,7 @@ export type Post = {
   energyLevel?: EnergyLevel;
   tags?: string[];
   sprintId?: string;
+  epicId?: string;
 
   subtasks?: Post[];
   dependencies?: Post[];
@@ -35,6 +36,25 @@ export type Sprint = {
     status: 'PLANNED' | 'ACTIVE' | 'COMPLETED';
     projectId: string;
     tasks?: Post[];
+};
+
+export type Epic = {
+    id: string;
+    name: string;
+    description?: string;
+    status: string;
+    projectId: string;
+    startDate?: string;
+    endDate?: string;
+    tasks?: Post[];
+};
+
+export type Milestone = {
+    id: string;
+    name: string;
+    date: string;
+    description?: string;
+    projectId: string;
 };
 
 export type Stat = {

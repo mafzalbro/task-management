@@ -3,7 +3,7 @@ import { RepositoryFactory } from '../../../infrastructure/repositories/Reposito
 import { GetTasksUseCase } from '../../../core/use-cases/GetTasks.js';
 import { CreateTaskUseCase } from '../../../core/use-cases/CreateTask.js';
 import { UpdateTaskUseCase } from '../../../core/use-cases/UpdateTask.js';
-import { SprintModel } from '../../../infrastructure/database/MongoModels.js';
+import { SprintModel, EpicModel, MilestoneModel, AutomationRuleModel } from '../../../infrastructure/database/MongoModels.js';
 
 const pubsub = new PubSub();
 const taskRepository = RepositoryFactory.getTaskRepository();
@@ -19,13 +19,14 @@ const updateTaskUC = new UpdateTaskUseCase(taskRepository);
 
 export const resolvers = {
   Query: {
-    tasks: (_: any, { projectId, status, priority, parentId, sprintId }: any) => {
+    tasks: (_: any, { projectId, status, priority, parentId, sprintId, epicId }: any) => {
       const filter: any = {};
       if (projectId) filter.projectId = projectId;
       if (status) filter.status = status;
       if (priority) filter.priority = priority;
       if (parentId) filter.parentId = parentId;
       if (sprintId) filter.sprintId = sprintId;
+      if (epicId) filter.epicId = epicId;
       return getTasksUC.execute(filter);
     },
     task: (_: any, { id }: any) => {
@@ -81,6 +82,22 @@ export const resolvers = {
     },
     sprint: (_: any, { id }: any) => {
         return SprintModel.findById(id);
+    },
+    epics: (_: any, { projectId }: any) => {
+        const filter: any = {};
+        if (projectId) filter.projectId = projectId;
+        return EpicModel.find(filter).sort({ createdAt: -1 });
+    },
+    epic: (_: any, { id }: any) => {
+        return EpicModel.findById(id);
+    },
+    milestones: (_: any, { projectId }: any) => {
+        const filter: any = {};
+        if (projectId) filter.projectId = projectId;
+        return MilestoneModel.find(filter).sort({ date: 1 });
+    },
+    automationRules: (_: any, { projectId }: any) => {
+        return AutomationRuleModel.find({ projectId });
     }
   },
   Task: {
@@ -112,6 +129,10 @@ export const resolvers = {
     sprint: (parent: any) => {
         if (!parent.sprintId) return null;
         return SprintModel.findById(parent.sprintId);
+    },
+    epic: (parent: any) => {
+        if (!parent.epicId) return null;
+        return EpicModel.findById(parent.epicId);
     }
   },
   Project: {
@@ -125,11 +146,25 @@ export const resolvers = {
     },
     sprints: (parent: any) => {
         return SprintModel.find({ projectId: parent.id });
+    },
+    epics: (parent: any) => {
+        return EpicModel.find({ projectId: parent.id });
+    },
+    milestones: (parent: any) => {
+        return MilestoneModel.find({ projectId: parent.id });
+    },
+    automationRules: (parent: any) => {
+        return AutomationRuleModel.find({ projectId: parent.id });
     }
   },
   Sprint: {
       tasks: (parent: any) => {
           return taskRepository.findAll({ sprintId: parent.id });
+      }
+  },
+  Epic: {
+      tasks: (parent: any) => {
+          return taskRepository.findAll({ epicId: parent.id });
       }
   },
   User: {
@@ -188,7 +223,23 @@ export const resolvers = {
           newData: task
         });
 
-        // Notify assignee if status changed
+        // Simple Automation Engine Framework
+        const rules = await AutomationRuleModel.find({ projectId: task.projectId, active: true });
+        for (const rule of rules) {
+            if (rule.trigger === 'STATUS_CHANGED' && updates.status) {
+                if (rule.action === 'NOTIFY_ASSIGNEE' && task.assigneeId) {
+                    const notification = await notificationRepository.create({
+                        userId: task.assigneeId,
+                        title: 'Automation Triggered',
+                        message: `Status of ${task.title} changed to ${task.status}`,
+                        type: 'AUTOMATION'
+                    });
+                    pubsub.publish('NOTIFICATION_CREATED', { notificationCreated: notification });
+                }
+            }
+        }
+
+        // Notify assignee if status changed (manual)
         if (task.assigneeId && updates.status && updates.status !== oldTask?.status) {
           const notification = await notificationRepository.create({
             userId: task.assigneeId,
@@ -296,6 +347,17 @@ export const resolvers = {
     },
     updateSprint: (_: any, { id, ...updates }: any) => {
         return SprintModel.findByIdAndUpdate(id, updates, { new: true });
+    },
+    createEpic: async (_: any, args: any) => {
+        const epic = await EpicModel.create(args);
+        pubsub.publish('EPIC_CREATED', { epicCreated: epic });
+        return epic;
+    },
+    createMilestone: async (_: any, args: any) => {
+        return MilestoneModel.create(args);
+    },
+    createAutomationRule: async (_: any, args: any) => {
+        return AutomationRuleModel.create(args);
     }
   },
   Subscription: {
@@ -316,6 +378,9 @@ export const resolvers = {
     },
     sprintCreated: {
         subscribe: () => (pubsub as any).asyncIterator(['SPRINT_CREATED'])
+    },
+    epicCreated: {
+        subscribe: () => (pubsub as any).asyncIterator(['EPIC_CREATED'])
     }
   }
 };

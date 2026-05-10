@@ -93,7 +93,7 @@ async function startServer() {
     }),
   );
 
-  const PORT = process.env.PORT || 4000;
+  const PORT = process.env.PORT || 3000;
 
   if (process.env.MONGODB_URI) {
     try {
