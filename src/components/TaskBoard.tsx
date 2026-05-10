@@ -74,6 +74,12 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
           </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex -space-x-2" style={{ marginRight: "16px" }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid var(--bg-main)", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800 }}>U{i}</div>
+            ))}
+            <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid var(--bg-main)", background: "var(--bg-subtle)", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700 }}>+4</div>
+          </div>
           <button className="btn-secondary">
             <MoreHorizontal size={18} />
           </button>
@@ -149,7 +155,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                       fontSize: "12px",
                       fontWeight: 700,
                       color: "var(--text-muted)",
-                      background: "var(--bg-card)",
+                      background: "var(--bg-subtle)",
                       padding: "2px 8px",
                       borderRadius: "10px",
                     }}

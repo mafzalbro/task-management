@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
     <header
       style={{
         height: "75px",
-        background: "rgba(255,255,255,0.92)",
+        background: "var(--bg-card)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid var(--border-light)",
@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
             fontWeight: 500,
           }}
         >
-          TaskMaster Pro &rsaquo;{" "}
+          Zenith Workspace &rsaquo;{" "}
           <span style={{ color: "var(--primary)", fontWeight: 600 }}>
             {title}
           </span>
@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({
             "var(--primary)";
           (e.currentTarget as HTMLDivElement).style.boxShadow =
             "0 0 0 4px var(--primary-light)";
-          (e.currentTarget as HTMLDivElement).style.background = "#fff";
+          (e.currentTarget as HTMLDivElement).style.background = "var(--bg-card)";
         }}
         onBlur={(e) => {
           (e.currentTarget as HTMLDivElement).style.borderColor =
@@ -289,7 +289,7 @@ const Header: React.FC<HeaderProps> = ({
                       gap: "12px",
                       padding: "14px 20px",
                       alignItems: "flex-start",
-                      background: n.unread ? "var(--primary-light)" : "#fff",
+                  background: n.unread ? "var(--primary-light)" : "var(--bg-card)",
                       borderBottom: "1px solid var(--border-light)",
                       cursor: "pointer",
                       transition: "background 0.15s ease",
@@ -299,7 +299,7 @@ const Header: React.FC<HeaderProps> = ({
                       (e.currentTarget.style.background = "var(--bg-subtle)")
                     }
                     onMouseLeave={(e) =>
-                      !n.unread && (e.currentTarget.style.background = "#fff")
+                      !n.unread && (e.currentTarget.style.background = "var(--bg-card)")
                     }
                   >
                     <span style={{ fontSize: "20px", flexShrink: 0 }}>

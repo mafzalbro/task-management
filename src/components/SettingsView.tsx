@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Bell, Palette, Shield, Save, Check } from "lucide-react";
+import { User, Bell, Palette, Shield, Save, Check, Moon, Sun } from "lucide-react";
 
 interface SettingsViewProps {
   settings: any;
@@ -118,9 +118,49 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 marginBottom: "24px",
               }}
             >
-              Customize the primary brand color for the workspace.
+              Customize your workspace theme and brand color.
             </p>
 
+            <div className="flex gap-4" style={{ marginBottom: "32px" }}>
+              <div
+                onClick={() => update("theme", "light")}
+                style={{
+                  flex: 1,
+                  padding: "16px",
+                  borderRadius: "12px",
+                  border: localSettings.theme === "light" ? "2px solid var(--primary)" : "1px solid var(--border-light)",
+                  background: "white",
+                  color: "#0F172A",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                <Sun size={20} /> Light
+              </div>
+              <div
+                onClick={() => update("theme", "dark")}
+                style={{
+                  flex: 1,
+                  padding: "16px",
+                  borderRadius: "12px",
+                  border: localSettings.theme === "dark" ? "2px solid var(--primary)" : "1px solid var(--border-light)",
+                  background: "#0F172A",
+                  color: "white",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                <Moon size={20} /> Dark
+              </div>
+            </div>
+
+            <label className="form-label" style={{ display: "block", marginBottom: "12px" }}>Brand Accent</label>
             <div className="flex flex-wrap gap-3">
               {COLORS.map((c) => (
                 <div

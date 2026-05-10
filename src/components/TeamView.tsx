@@ -1,58 +1,12 @@
-import React from "react";
-import { Mail, Github, MoreHorizontal } from "lucide-react";
+import React, { useState } from "react";
+import { Mail, MoreHorizontal, Trash2, UserPlus } from "lucide-react";
+import type { TeamMember } from "../types";
+import InviteModal from "./InviteModal";
 
-const MEMBERS = [
-  {
-    id: 1,
-    name: "Alex Rivera",
-    role: "Product Designer",
-    status: "online",
-    statusLabel: "Online",
-    tasks: 12,
-    initials: "AR",
-    color: "var(--primary)",
-  },
-  {
-    id: 2,
-    name: "Samantha Smith",
-    role: "Full-stack Engineer",
-    status: "away",
-    statusLabel: "Away",
-    tasks: 8,
-    initials: "SS",
-    color: "var(--success)",
-  },
-  {
-    id: 3,
-    name: "Jamie Chen",
-    role: "Digital Marketer",
-    status: "busy",
-    statusLabel: "Busy",
-    tasks: 5,
-    initials: "JC",
-    color: "var(--warning)",
-  },
-  {
-    id: 4,
-    name: "Taylor Wilson",
-    role: "QA Engineer",
-    status: "offline",
-    statusLabel: "Offline",
-    tasks: 4,
-    initials: "TW",
-    color: "#94A3B8",
-  },
-  {
-    id: 5,
-    name: "Jordan Lee",
-    role: "Backend Engineer",
-    status: "online",
-    statusLabel: "Online",
-    tasks: 9,
-    initials: "JL",
-    color: "var(--danger)",
-  },
-];
+interface TeamViewProps {
+  members: TeamMember[];
+  onUpdateMembers: (members: TeamMember[]) => void;
+}
 
 const STATUS_COLORS: Record<string, string> = {
   online: "var(--success)",
@@ -61,7 +15,19 @@ const STATUS_COLORS: Record<string, string> = {
   offline: "#CBD5E1",
 };
 
-const TeamView: React.FC = () => {
+const TeamView: React.FC<TeamViewProps> = ({ members, onUpdateMembers }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleInvite = (member: TeamMember) => {
+    onUpdateMembers([...members, member]);
+  };
+
+  const handleRemove = (id: string) => {
+    if (window.confirm("Are you sure you want to remove this team member?")) {
+      onUpdateMembers(members.filter((m) => m.id !== id));
+    }
+  };
+
   return (
     <div className="main-content">
       <div
@@ -89,7 +55,9 @@ const TeamView: React.FC = () => {
             Collaborate with your project team members.
           </p>
         </div>
-        <button className="btn-primary">+ Invite Member</button>
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+          <UserPlus size={18} /> Invite Member
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -97,17 +65,17 @@ const TeamView: React.FC = () => {
         {[
           {
             label: "Total Members",
-            value: MEMBERS.length,
-            sub: "2 joined this month",
+            value: members.length,
+            sub: "Active in Zenith Workspace",
           },
           {
             label: "Currently Online",
-            value: MEMBERS.filter((m) => m.status === "online").length,
-            sub: "Out of 5 members",
+            value: members.filter((m) => m.status === "online").length,
+            sub: `Out of ${members.length} members`,
           },
           {
             label: "Active Tasks",
-            value: MEMBERS.reduce((s, m) => s + m.tasks, 0),
+            value: members.reduce((s, m) => s + m.tasks, 0),
             sub: "Across all members",
           },
         ].map((item, i) => (
@@ -155,7 +123,7 @@ const TeamView: React.FC = () => {
           gap: "20px",
         }}
       >
-        {MEMBERS.map((m) => (
+        {members.map((m) => (
           <div
             key={m.id}
             className="stat-card"
@@ -249,13 +217,23 @@ const TeamView: React.FC = () => {
               <button className="icon-btn-ghost" title="Email">
                 <Mail size={16} />
               </button>
-              <button className="icon-btn-ghost" title="More">
-                <MoreHorizontal size={16} />
+              <button
+                className="icon-btn-ghost"
+                title="Remove"
+                onClick={() => handleRemove(m.id)}
+              >
+                <Trash2 size={16} className="text-danger" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      <InviteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onInvite={handleInvite}
+      />
     </div>
   );
 };

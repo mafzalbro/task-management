@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         width: "260px",
         minWidth: "260px",
         height: "100%",
-        background: "#fff",
+        background: "var(--bg-card)",
         borderRight: "1px solid var(--border-light)",
         display: "flex",
         flexDirection: "column",
@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 lineHeight: 1.2,
               }}
             >
-              TaskMaster
+              Zenith
             </div>
             <div
               style={{
@@ -194,7 +194,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 marginBottom: "2px",
                 transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
                 background: isActive ? "var(--primary)" : "transparent",
-                color: isActive ? "#fff" : "var(--text-muted)",
+                color: isActive ? "white" : "var(--text-muted)",
                 boxShadow: isActive
                   ? "0 4px 12px rgba(79, 70, 229, 0.25)"
                   : "none",
@@ -280,7 +280,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             marginBottom: "2px",
             background:
               activeTab === "settings" ? "var(--primary)" : "transparent",
-            color: activeTab === "settings" ? "#fff" : "var(--text-muted)",
+            color: activeTab === "settings" ? "white" : "var(--text-muted)",
           }}
         >
           <Settings size={18} />

@@ -10,8 +10,9 @@ import CalendarView from "./components/CalendarView";
 import TeamView from "./components/TeamView";
 import ReportsView from "./components/ReportsView";
 import SettingsView from "./components/SettingsView";
+import CommandPalette from "./components/CommandPalette";
 import useLocalStorage from "./hooks/useLocalStorage";
-import type { Post } from "./types";
+import type { Post, Project, TeamMember } from "./types";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 
 const initialTasks: Post[] = [
@@ -80,10 +81,96 @@ const initialTasks: Post[] = [
 const initialSettings = {
   userName: "Alex Rivera",
   userRole: "Product Designer",
-  userEmail: "alex@taskmaster.pro",
+  userEmail: "alex@zenith.pro",
   primaryColor: "#4F46E5",
   density: "Comfortable",
+  theme: "light",
 };
+
+const initialProjects: Project[] = [
+  {
+    id: "PJ1",
+    name: "Product Redesign",
+    description: "Full UX overhaul of the core product surfaces.",
+    status: "Active",
+    color: "var(--primary)",
+    members: 4,
+  },
+  {
+    id: "PJ2",
+    name: "Marketing Campaign",
+    description: "Q2 digital marketing campaign for product launch.",
+    status: "In Review",
+    color: "var(--success)",
+    members: 3,
+  },
+  {
+    id: "PJ3",
+    name: "Infrastructure Migration",
+    description: "Migrate legacy infrastructure to Kubernetes.",
+    status: "Planned",
+    color: "var(--warning)",
+    members: 5,
+  },
+];
+
+const initialMembers: TeamMember[] = [
+  {
+    id: "1",
+    name: "Alex Rivera",
+    role: "Product Designer",
+    status: "online",
+    statusLabel: "Online",
+    tasks: 12,
+    initials: "AR",
+    color: "var(--primary)",
+    email: "alex@zenith.pro",
+  },
+  {
+    id: "2",
+    name: "Samantha Smith",
+    role: "Full-stack Engineer",
+    status: "away",
+    statusLabel: "Away",
+    tasks: 8,
+    initials: "SS",
+    color: "var(--success)",
+    email: "sam@zenith.pro",
+  },
+  {
+    id: "3",
+    name: "Jamie Chen",
+    role: "Digital Marketer",
+    status: "busy",
+    statusLabel: "Busy",
+    tasks: 5,
+    initials: "JC",
+    color: "var(--warning)",
+    email: "jamie@zenith.pro",
+  },
+  {
+    id: "4",
+    name: "Taylor Wilson",
+    role: "QA Engineer",
+    status: "offline",
+    statusLabel: "Offline",
+    tasks: 4,
+    initials: "TW",
+    color: "#94A3B8",
+    email: "taylor@zenith.pro",
+  },
+  {
+    id: "5",
+    name: "Jordan Lee",
+    role: "Backend Engineer",
+    status: "online",
+    statusLabel: "Online",
+    tasks: 9,
+    initials: "JL",
+    color: "var(--danger)",
+    email: "jordan@zenith.pro",
+  },
+];
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: "Overview",
@@ -107,17 +194,23 @@ const pageVariants: Variants = {
 };
 
 function App() {
-  const [tasks, setTasks] = useLocalStorage<Post[]>(
-    "tm_tasks_v3",
-    initialTasks,
+  const [tasks, setTasks] = useLocalStorage<Post[]>("z_tasks_v1", initialTasks);
+  const [projects, setProjects] = useLocalStorage<Project[]>(
+    "z_projects_v1",
+    initialProjects,
+  );
+  const [members, setMembers] = useLocalStorage<TeamMember[]>(
+    "z_members_v1",
+    initialMembers,
   );
   const [settings, setSettings] = useLocalStorage(
-    "tm_settings_v3",
+    "z_settings_v1",
     initialSettings,
   );
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
   // Apply Theme Color to CSS Variable
@@ -130,14 +223,15 @@ function App() {
     const lightColor = settings.primaryColor + "15"; // 15% opacity hex variant
     document.documentElement.style.setProperty("--primary-hover", hoverColor);
     document.documentElement.style.setProperty("--primary-light", lightColor);
-  }, [settings.primaryColor]);
+    document.documentElement.setAttribute("data-theme", settings.theme || "light");
+  }, [settings.primaryColor, settings.theme]);
 
   // Keyboard Shortcuts (Ctrl/Cmd + K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        window.dispatchEvent(new CustomEvent("focus-search"));
+        setIsCommandPaletteOpen(true);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -242,11 +336,19 @@ function App() {
           />
         );
       case "projects":
-        return <ProjectsView tasks={filteredTasks} />;
+        return (
+          <ProjectsView
+            tasks={filteredTasks}
+            projects={projects}
+            onUpdateProjects={setProjects}
+          />
+        );
       case "calendar":
         return <CalendarView tasks={filteredTasks} onAddTask={openAdd} />;
       case "team":
-        return <TeamView />;
+        return (
+          <TeamView members={members} onUpdateMembers={setMembers} />
+        );
       case "reports":
         return <ReportsView tasks={filteredTasks} />;
       case "settings":
@@ -293,6 +395,18 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         editTask={editTask}
+        projects={projects}
+        members={members}
+      />
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        tasks={tasks}
+        projects={projects}
+        members={members}
+        onNavigate={setActiveTab}
+        onAddTask={openAdd}
       />
     </div>
   );

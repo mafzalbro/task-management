@@ -1,37 +1,13 @@
-import React from "react";
-import type { Post } from "../types";
-import { FolderOpen, MoreHorizontal, Users, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
+import type { Post, Project } from "../types";
+import { FolderOpen, MoreHorizontal, Users, CheckCircle2, Trash2 } from "lucide-react";
+import ProjectModal from "./ProjectModal";
 
 interface ProjectsViewProps {
   tasks: Post[];
+  projects: Project[];
+  onUpdateProjects: (projects: Project[]) => void;
 }
-
-const PROJECTS = [
-  {
-    id: "PJ1",
-    name: "Product Redesign",
-    description: "Full UX overhaul of the core product surfaces.",
-    status: "Active",
-    color: "var(--primary)",
-    members: 4,
-  },
-  {
-    id: "PJ2",
-    name: "Marketing Campaign",
-    description: "Q2 digital marketing campaign for product launch.",
-    status: "In Review",
-    color: "var(--success)",
-    members: 3,
-  },
-  {
-    id: "PJ3",
-    name: "Infrastructure Migration",
-    description: "Migrate legacy infrastructure to Kubernetes.",
-    status: "Planned",
-    color: "var(--warning)",
-    members: 5,
-  },
-];
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   Active: { bg: "var(--success-bg)", text: "var(--success)" },
@@ -39,7 +15,25 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   Planned: { bg: "var(--warning-bg)", text: "var(--warning)" },
 };
 
-const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
+const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks, projects, onUpdateProjects }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  const handleSave = (project: Project) => {
+    if (editingProject) {
+      onUpdateProjects(projects.map(p => p.id === project.id ? project : p));
+    } else {
+      onUpdateProjects([...projects, project]);
+    }
+  };
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      onUpdateProjects(projects.filter(p => p.id !== id));
+    }
+  };
+
   const getProjectData = (id: string) => {
     const pTasks = tasks.filter((t) => t.projectId === id);
     const done = pTasks.filter((t) => t.status === "Completed").length;
@@ -75,7 +69,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
             Track and manage your active project portfolio.
           </p>
         </div>
-        <button className="btn-primary">
+        <button className="btn-primary" onClick={() => { setEditingProject(null); setIsModalOpen(true); }}>
           <FolderOpen size={18} /> New Project
         </button>
       </div>
@@ -87,7 +81,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
           gap: "24px",
         }}
       >
-        {PROJECTS.map((project) => {
+        {projects.map((project) => {
           const { total, done, pct } = getProjectData(project.id);
           const sc = statusColors[project.status];
 
@@ -95,6 +89,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
             <div
               key={project.id}
               className="stat-card"
+              onClick={() => { setEditingProject(project); setIsModalOpen(true); }}
               style={{
                 padding: "32px",
                 cursor: "pointer",
@@ -119,9 +114,11 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                 >
                   <FolderOpen size={24} />
                 </div>
-                <button className="icon-btn-ghost">
-                  <MoreHorizontal size={20} />
-                </button>
+                <div className="flex gap-1">
+                  <button className="icon-btn-ghost" onClick={(e) => handleDelete(project.id, e)}>
+                    <Trash2 size={18} className="text-danger" />
+                  </button>
+                </div>
               </div>
 
               {/* Title + Status */}
@@ -225,6 +222,13 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
           );
         })}
       </div>
+
+      <ProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        editProject={editingProject}
+      />
     </div>
   );
 };

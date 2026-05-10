@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from "react";
-import type { Post, TaskStatus, TaskPriority } from "../types";
-import { X, AlertCircle } from "lucide-react";
+import type { Post, TaskStatus, TaskPriority, Project, TeamMember } from "../types";
+import { X, ListTodo, History, MessageSquare, Paperclip } from "lucide-react";
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (task: Post) => void;
   editTask?: Post | null;
+  projects: Project[];
+  members: TeamMember[];
 }
-
-const PROJECTS = [
-  { id: "PJ1", name: "Product Redesign" },
-  { id: "PJ2", name: "Marketing Campaign" },
-  { id: "PJ3", name: "Infrastructure Migration" },
-];
 
 const TaskModal: React.FC<TaskModalProps> = ({
   isOpen,
   onClose,
   onSave,
   editTask,
+  projects,
+  members,
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -119,7 +117,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex-col gap-6" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "32px", alignItems: "start" }}>
+          <div className="flex-col gap-6">
           {/* Title */}
           <div className="form-group">
             <label className="form-label">Task Title *</label>
@@ -193,7 +192,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
               >
-                {PROJECTS.map((p) => (
+                {projects.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
@@ -205,30 +204,80 @@ const TaskModal: React.FC<TaskModalProps> = ({
           {/* Assignee */}
           <div className="form-group">
             <label className="form-label">Assignee</label>
-            <input
+            <select
               className="form-input"
-              type="text"
               value={assignee}
               onChange={(e) => setAssignee(e.target.value)}
-              placeholder="e.g., Alex Rivera"
-            />
+            >
+              {members.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
           </div>
 
-          {/* Footer */}
-          <div
-            className="flex justify-end gap-3"
-            style={{
-              paddingTop: "8px",
-              borderTop: "1px solid var(--border-light)",
-              marginTop: "8px",
-            }}
-          >
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary">
-              {editTask ? "Save Changes" : "Create Task"}
-            </button>
+          {/* Right Panel: Functional Extensions (UI Only) */}
+          <div className="flex-col gap-6" style={{ borderLeft: "1px solid var(--border-light)", paddingLeft: "32px" }}>
+            <div>
+              <div className="flex items-center gap-2" style={{ marginBottom: "16px" }}>
+                <ListTodo size={18} color="var(--primary)" />
+                <h3 style={{ fontSize: "15px", fontWeight: 700 }}>Checklist</h3>
+              </div>
+              <div className="flex-col gap-2">
+                {[1, 2].map(i => (
+                   <div key={i} className="flex items-center gap-3" style={{ padding: "8px 12px", background: "var(--bg-subtle)", borderRadius: "8px", opacity: 0.7 }}>
+                     <div style={{ width: 16, height: 16, borderRadius: "4px", border: "2px solid var(--text-muted)" }} />
+                     <span style={{ fontSize: "13px", fontWeight: 500 }}>Sub-task item {i}...</span>
+                   </div>
+                ))}
+                <button type="button" style={{ background: "none", border: "1px dashed var(--border-light)", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginTop: "4px" }}>
+                  + Add item
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2" style={{ marginBottom: "16px" }}>
+                <History size={18} color="var(--primary)" />
+                <h3 style={{ fontSize: "15px", fontWeight: 700 }}>Activity</h3>
+              </div>
+              <div className="flex-col gap-4">
+                <div className="flex gap-3">
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 800 }}>AR</div>
+                  <div>
+                    <p style={{ fontSize: "13px", fontWeight: 600 }}>Alex Rivera <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>created this task</span></p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>2 hours ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+               <button type="button" className="icon-btn-ghost" style={{ flex: 1, border: "1px solid var(--border-light)", fontSize: "13px", fontWeight: 600 }}>
+                 <MessageSquare size={14} /> Comment
+               </button>
+               <button type="button" className="icon-btn-ghost" style={{ flex: 1, border: "1px solid var(--border-light)", fontSize: "13px", fontWeight: 600 }}>
+                 <Paperclip size={14} /> Attach
+               </button>
+            </div>
+
+            <div
+              className="flex justify-end gap-3"
+              style={{
+                paddingTop: "24px",
+                borderTop: "1px solid var(--border-light)",
+                marginTop: "12px",
+              }}
+            >
+              <button type="button" className="btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                {editTask ? "Save Changes" : "Create Task"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

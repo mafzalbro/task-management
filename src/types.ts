@@ -12,6 +12,27 @@ export type Post = {
   assignee: string;
 };
 
+export type Project = {
+  id: string;
+  name: string;
+  description: string;
+  status: "Active" | "In Review" | "Planned" | "Completed";
+  color: string;
+  members: number;
+};
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  status: "online" | "away" | "busy" | "offline";
+  statusLabel: string;
+  tasks: number;
+  initials: string;
+  color: string;
+  email: string;
+};
+
 export type Stat = {
   title: string;
   value: number | string;
