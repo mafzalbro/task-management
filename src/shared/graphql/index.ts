@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const GET_TASKS = gql`
-  query GetTasks($projectId: String) {
-    tasks(projectId: $projectId) {
+  query GetTasks($projectId: String, $parentId: String, $sprintId: String) {
+    tasks(projectId: $projectId, parentId: $parentId, sprintId: $sprintId) {
       id
       title
       description
@@ -17,6 +17,57 @@ export const GET_TASKS = gql`
       }
       creatorId
       createdAt
+
+      # Enterprise
+      parentId
+      dependencyIds
+      estimate
+      actualEffort
+      energyLevel
+      tags
+      sprintId
+      subtasks {
+        id
+        title
+        status
+      }
+    }
+  }
+`;
+
+export const GET_SPRINTS = gql`
+  query GetSprints($projectId: String) {
+    sprints(projectId: $projectId) {
+      id
+      name
+      goal
+      startDate
+      endDate
+      status
+      projectId
+      tasks {
+        id
+        estimate
+        status
+      }
+    }
+  }
+`;
+
+export const CREATE_SPRINT = gql`
+  mutation CreateSprint($name: String!, $goal: String, $startDate: String!, $endDate: String!, $projectId: String!) {
+    createSprint(name: $name, goal: $goal, startDate: $startDate, endDate: $endDate, projectId: $projectId) {
+      id
+      name
+    }
+  }
+`;
+
+export const UPDATE_SPRINT = gql`
+  mutation UpdateSprint($id: ID!, $status: String) {
+    updateSprint(id: $id, status: $status) {
+      id
+      status
     }
   }
 `;
@@ -173,8 +224,36 @@ export const CREATE_PROJECT = gql`
 `;
 
 export const CREATE_TASK = gql`
-  mutation CreateTask($title: String!, $projectId: String!, $description: String, $status: TaskStatus, $priority: TaskPriority, $dueDate: String, $assigneeId: String) {
-    createTask(title: $title, projectId: $projectId, description: $description, status: $status, priority: $priority, dueDate: $dueDate, assigneeId: $assigneeId) {
+  mutation CreateTask(
+    $title: String!,
+    $projectId: String!,
+    $description: String,
+    $status: TaskStatus,
+    $priority: TaskPriority,
+    $dueDate: String,
+    $assigneeId: String,
+    $parentId: String,
+    $dependencyIds: [String],
+    $estimate: Int,
+    $energyLevel: EnergyLevel,
+    $tags: [String],
+    $sprintId: String
+  ) {
+    createTask(
+      title: $title,
+      projectId: $projectId,
+      description: $description,
+      status: $status,
+      priority: $priority,
+      dueDate: $dueDate,
+      assigneeId: $assigneeId,
+      parentId: $parentId,
+      dependencyIds: $dependencyIds,
+      estimate: $estimate,
+      energyLevel: $energyLevel,
+      tags: $tags,
+      sprintId: $sprintId
+    ) {
       id
       title
       status
@@ -183,8 +262,38 @@ export const CREATE_TASK = gql`
 `;
 
 export const UPDATE_TASK = gql`
-  mutation UpdateTask($id: ID!, $status: TaskStatus, $priority: TaskPriority, $title: String, $description: String, $dueDate: String, $assigneeId: String) {
-    updateTask(id: $id, status: $status, priority: $priority, title: $title, description: $description, dueDate: $dueDate, assigneeId: $assigneeId) {
+  mutation UpdateTask(
+    $id: ID!,
+    $status: TaskStatus,
+    $priority: TaskPriority,
+    $title: String,
+    $description: String,
+    $dueDate: String,
+    $assigneeId: String,
+    $parentId: String,
+    $dependencyIds: [String],
+    $estimate: Int,
+    $actualEffort: Int,
+    $energyLevel: EnergyLevel,
+    $tags: [String],
+    $sprintId: String
+  ) {
+    updateTask(
+      id: $id,
+      status: $status,
+      priority: $priority,
+      title: $title,
+      description: $description,
+      dueDate: $dueDate,
+      assigneeId: $assigneeId,
+      parentId: $parentId,
+      dependencyIds: $dependencyIds,
+      estimate: $estimate,
+      actualEffort: $actualEffort,
+      energyLevel: $energyLevel,
+      tags: $tags,
+      sprintId: $sprintId
+    ) {
       id
       title
       status

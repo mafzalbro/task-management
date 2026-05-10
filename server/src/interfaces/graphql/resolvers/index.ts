@@ -3,6 +3,7 @@ import { RepositoryFactory } from '../../../infrastructure/repositories/Reposito
 import { GetTasksUseCase } from '../../../core/use-cases/GetTasks.js';
 import { CreateTaskUseCase } from '../../../core/use-cases/CreateTask.js';
 import { UpdateTaskUseCase } from '../../../core/use-cases/UpdateTask.js';
+import { SprintModel } from '../../../infrastructure/database/MongoModels.js';
 
 const pubsub = new PubSub();
 const taskRepository = RepositoryFactory.getTaskRepository();
@@ -18,11 +19,13 @@ const updateTaskUC = new UpdateTaskUseCase(taskRepository);
 
 export const resolvers = {
   Query: {
-    tasks: (_: any, { projectId, status, priority }: any) => {
+    tasks: (_: any, { projectId, status, priority, parentId, sprintId }: any) => {
       const filter: any = {};
       if (projectId) filter.projectId = projectId;
       if (status) filter.status = status;
       if (priority) filter.priority = priority;
+      if (parentId) filter.parentId = parentId;
+      if (sprintId) filter.sprintId = sprintId;
       return getTasksUC.execute(filter);
     },
     task: (_: any, { id }: any) => {
@@ -70,6 +73,14 @@ export const resolvers = {
         }
       };
       return analytics;
+    },
+    sprints: (_: any, { projectId }: any) => {
+        const filter: any = {};
+        if (projectId) filter.projectId = projectId;
+        return SprintModel.find(filter).sort({ startDate: -1 });
+    },
+    sprint: (_: any, { id }: any) => {
+        return SprintModel.findById(id);
     }
   },
   Task: {
@@ -85,6 +96,22 @@ export const resolvers = {
     assignee: (parent: any) => {
       if (!parent.assigneeId) return null;
       return userRepository.findByAuth0Id(parent.assigneeId);
+    },
+    parent: (parent: any) => {
+      if (!parent.parentId) return null;
+      return taskRepository.findById(parent.parentId);
+    },
+    subtasks: (parent: any) => {
+      return taskRepository.findAll({ parentId: parent.id });
+    },
+    dependencies: async (parent: any) => {
+      if (!parent.dependencyIds || parent.dependencyIds.length === 0) return [];
+      const tasks = await Promise.all(parent.dependencyIds.map((id: string) => taskRepository.findById(id)));
+      return tasks.filter(t => t !== null);
+    },
+    sprint: (parent: any) => {
+        if (!parent.sprintId) return null;
+        return SprintModel.findById(parent.sprintId);
     }
   },
   Project: {
@@ -95,7 +122,15 @@ export const resolvers = {
       if (!parent.teamIds) return [];
       const users = await Promise.all(parent.teamIds.map((id: string) => userRepository.findByAuth0Id(id)));
       return users.filter(u => u !== null);
+    },
+    sprints: (parent: any) => {
+        return SprintModel.find({ projectId: parent.id });
     }
+  },
+  Sprint: {
+      tasks: (parent: any) => {
+          return taskRepository.findAll({ sprintId: parent.id });
+      }
   },
   User: {
     manager: (parent: any) => {
@@ -253,6 +288,14 @@ export const resolvers = {
       const auth0Id = context.userId;
       if (!auth0Id || auth0Id === 'guest-user') return false;
       return notificationRepository.markAllAsRead(auth0Id);
+    },
+    createSprint: async (_: any, args: any, context: any) => {
+        const sprint = await SprintModel.create(args);
+        pubsub.publish('SPRINT_CREATED', { sprintCreated: sprint });
+        return sprint;
+    },
+    updateSprint: (_: any, { id, ...updates }: any) => {
+        return SprintModel.findByIdAndUpdate(id, updates, { new: true });
     }
   },
   Subscription: {
@@ -270,6 +313,9 @@ export const resolvers = {
     },
     notificationCreated: {
       subscribe: () => (pubsub as any).asyncIterator(['NOTIFICATION_CREATED'])
+    },
+    sprintCreated: {
+        subscribe: () => (pubsub as any).asyncIterator(['SPRINT_CREATED'])
     }
   }
 };

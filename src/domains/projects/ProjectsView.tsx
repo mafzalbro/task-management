@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import type { Post } from "../types";
+import type { Post } from "../../shared/types";
 import { FolderOpen, MoreHorizontal, Users, CheckCircle2, Trash2 } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_PROJECTS, CREATE_PROJECT, DELETE_PROJECT } from "../graphql/operations";
+import { GET_PROJECTS, CREATE_PROJECT, DELETE_PROJECT } from "../../shared/graphql";
 import ProjectModal from "./ProjectModal";
-import { useToast } from "../contexts/ToastContext";
+import { useToast } from "../../shared/providers";
 
 interface ProjectsViewProps {
   tasks: Post[];

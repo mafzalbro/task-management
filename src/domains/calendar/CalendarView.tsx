@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Post } from "../types";
+import type { Post } from "../../shared/types";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 interface CalendarViewProps {

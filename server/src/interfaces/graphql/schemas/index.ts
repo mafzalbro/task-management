@@ -4,9 +4,16 @@ export const typeDefs = `#graphql
     IN_PROGRESS
     REVIEW
     COMPLETED
+    BACKLOG
   }
 
   enum TaskPriority {
+    LOW
+    MEDIUM
+    HIGH
+  }
+
+  enum EnergyLevel {
     LOW
     MEDIUM
     HIGH
@@ -35,6 +42,32 @@ export const typeDefs = `#graphql
     notes: [Note]
     project: Project
     assignee: User
+
+    # Enterprise Enhancements
+    parentId: String
+    parent: Task
+    subtasks: [Task]
+    dependencyIds: [String]
+    dependencies: [Task]
+    estimate: Int
+    actualEffort: Int
+    energyLevel: EnergyLevel
+    tags: [String]
+    sprintId: String
+    sprint: Sprint
+  }
+
+  type Sprint {
+    id: ID!
+    name: String!
+    goal: String
+    startDate: String!
+    endDate: String!
+    status: String!
+    projectId: String!
+    tasks: [Task]
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Project {
@@ -47,6 +80,7 @@ export const typeDefs = `#graphql
     updatedAt: String!
     tasks: [Task]
     members: [User]
+    sprints: [Sprint]
   }
 
   type User {
@@ -110,7 +144,7 @@ export const typeDefs = `#graphql
   }
 
   type Query {
-    tasks(projectId: String, status: TaskStatus, priority: TaskPriority): [Task]
+    tasks(projectId: String, status: TaskStatus, priority: TaskPriority, parentId: String, sprintId: String): [Task]
     task(id: ID!): Task
     projects: [Project]
     project(id: ID!): Project
@@ -120,6 +154,8 @@ export const typeDefs = `#graphql
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
     projectAnalytics(projectId: String!): Analytics
     notifications: [Notification]
+    sprints(projectId: String): [Sprint]
+    sprint(id: ID!): Sprint
   }
 
   type Mutation {
@@ -131,6 +167,12 @@ export const typeDefs = `#graphql
       dueDate: String
       projectId: String!
       assigneeId: String
+      parentId: String
+      dependencyIds: [String]
+      estimate: Int
+      energyLevel: EnergyLevel
+      tags: [String]
+      sprintId: String
     ): Task
 
     updateTask(
@@ -141,6 +183,13 @@ export const typeDefs = `#graphql
       priority: TaskPriority
       dueDate: String
       assigneeId: String
+      parentId: String
+      dependencyIds: [String]
+      estimate: Int
+      actualEffort: Int
+      energyLevel: EnergyLevel
+      tags: [String]
+      sprintId: String
     ): Task
 
     deleteTask(id: ID!): Boolean
@@ -175,6 +224,23 @@ export const typeDefs = `#graphql
     assignManager(userId: ID!, managerId: ID!): User
     markNotificationAsRead(id: ID!): Notification
     markAllNotificationsAsRead: Boolean
+
+    createSprint(
+      name: String!
+      goal: String
+      startDate: String!
+      endDate: String!
+      projectId: String!
+    ): Sprint
+
+    updateSprint(
+      id: ID!
+      name: String
+      goal: String
+      startDate: String
+      endDate: String
+      status: String
+    ): Sprint
   }
 
   type Subscription {
@@ -183,5 +249,6 @@ export const typeDefs = `#graphql
     projectCreated: Project
     noteCreated(projectId: String, taskId: String): Note
     notificationCreated: Notification
+    sprintCreated(projectId: String): Sprint
   }
 `;

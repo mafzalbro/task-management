@@ -1,5 +1,5 @@
 import React from "react";
-import type { Post } from "../types";
+import type { Post } from "../../shared/types";
 import { Download, TrendingUp } from "lucide-react";
 import {
   ResponsiveContainer,
