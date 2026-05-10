@@ -35,11 +35,34 @@ export const GET_AUDIT_LOGS = gql`
 `;
 
 export const INVITE_USER = gql`
-  mutation InviteUser($email: String!, $name: String!) {
-    inviteUser(email: $email, name: $name) {
+  mutation InviteUser($email: String!, $name: String!, $role: UserRole) {
+    inviteUser(email: $email, name: $name, role: $role) {
       id
       name
       email
+      role
+    }
+  }
+`;
+
+export const UPDATE_USER_ROLE = gql`
+  mutation UpdateUserRole($id: ID!, $role: UserRole!) {
+    updateUserRole(id: $id, role: $role) {
+      id
+      role
+    }
+  }
+`;
+
+export const ASSIGN_MANAGER = gql`
+  mutation AssignManager($userId: ID!, $managerId: ID!) {
+    assignManager(userId: $userId, managerId: $managerId) {
+      id
+      managerId
+      manager {
+        id
+        name
+      }
     }
   }
 `;
@@ -125,6 +148,16 @@ export const GET_TEAM = gql`
       name
       email
       avatarUrl
+      role
+      managerId
+      manager {
+        id
+        name
+      }
+      reports {
+        id
+        name
+      }
       createdAt
     }
   }

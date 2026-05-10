@@ -5,8 +5,12 @@ import {
   Trash2,
   Edit3,
   ArrowRightLeft,
+  UserPlus,
+  ChevronRight,
 } from "lucide-react";
 import type { Post } from "../types";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_TEAM, UPDATE_TASK } from "../graphql/operations";
 
 interface TaskCardProps {
   task: Post;
@@ -22,7 +26,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onMove,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showAssignMenu, setShowAssignMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  const { data: teamData } = useQuery(GET_TEAM);
+  const [updateTask] = useMutation(UPDATE_TASK);
 
   const statusOptions: Post["status"][] = [
     "To Do",
@@ -40,6 +48,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const handleDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const handleQuickAssign = async (userId: string) => {
+    await updateTask({
+      variables: {
+        id: task.id,
+        assigneeId: userId
+      }
+    });
+    setShowAssignMenu(false);
+    setShowMenu(false);
   };
 
   return (
@@ -129,6 +148,48 @@ const TaskCard: React.FC<TaskCardProps> = ({
               >
                 <Trash2 size={14} /> Delete
               </div>
+
+              <div
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setShowAssignMenu(!showAssignMenu);
+                }}
+                className="flex items-center justify-between gap-2"
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--bg-subtle)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                <div className="flex items-center gap-2">
+                   <UserPlus size={14} /> Assign to...
+                </div>
+                <ChevronRight size={12} style={{ opacity: 0.5 }} />
+              </div>
+
+              {showAssignMenu && (
+                 <div style={{ padding: '4px', borderTop: '1px solid var(--border-light)', marginTop: '4px', maxHeight: '150px', overflowY: 'auto' }}>
+                    {teamData?.users?.map((u: any) => (
+                       <div
+                         key={u.id}
+                         onClick={() => handleQuickAssign(u.id)}
+                         style={{ padding: '6px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                         onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-light)')}
+                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                       >
+                          {u.name}
+                       </div>
+                    ))}
+                 </div>
+              )}
 
               {onMove && (
                 <>

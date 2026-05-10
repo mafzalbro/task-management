@@ -10,6 +10,8 @@ export class MongoUserRepository implements IUserRepository {
       name: doc.name,
       avatarUrl: doc.avatarUrl,
       auth0Id: doc.auth0Id,
+      role: doc.role,
+      managerId: doc.managerId,
       createdAt: doc.createdAt,
     };
   }
@@ -43,5 +45,16 @@ export class MongoUserRepository implements IUserRepository {
   async create(user: Partial<User>): Promise<User> {
     const doc = await UserModel.create(user);
     return this.mapToEntity(doc);
+  }
+
+  async update(id: string, user: Partial<User>): Promise<User> {
+    const doc = await UserModel.findByIdAndUpdate(id, user, { new: true });
+    if (!doc) throw new Error('User not found');
+    return this.mapToEntity(doc);
+  }
+
+  async findByManager(managerId: string): Promise<User[]> {
+    const docs = await UserModel.find({ managerId });
+    return docs.map(doc => this.mapToEntity(doc));
   }
 }

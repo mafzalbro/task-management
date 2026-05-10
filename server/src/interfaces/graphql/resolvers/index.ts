@@ -97,6 +97,15 @@ export const resolvers = {
       return users.filter(u => u !== null);
     }
   },
+  User: {
+    manager: (parent: any) => {
+      if (!parent.managerId) return null;
+      return userRepository.findById(parent.managerId);
+    },
+    reports: (parent: any) => {
+      return userRepository.findByManager(parent.id);
+    }
+  },
   Mutation: {
     createTask: async (_: any, args: any, context: any) => {
       try {
@@ -210,13 +219,14 @@ export const resolvers = {
       }
       return userRepository.create({ ...args, auth0Id });
     },
-    inviteUser: async (_: any, { email, name }: any, context: any) => {
+    inviteUser: async (_: any, { email, name, role }: any, context: any) => {
       const existing = await userRepository.findByEmail(email);
       if (existing) return existing;
 
       const newUser = await userRepository.create({
         email,
         name,
+        role: role || 'EMPLOYEE',
         auth0Id: `invited|${Date.now()}`, // Temporary ID
       });
 
@@ -229,6 +239,12 @@ export const resolvers = {
       });
 
       return newUser;
+    },
+    updateUserRole: (_: any, { id, role }: any) => {
+      return userRepository.update(id, { role });
+    },
+    assignManager: (_: any, { userId, managerId }: any) => {
+      return userRepository.update(userId, { managerId });
     },
     markNotificationAsRead: async (_: any, { id }: any) => {
       return notificationRepository.markAsRead(id);

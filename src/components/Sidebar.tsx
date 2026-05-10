@@ -29,6 +29,12 @@ const MAIN_NAV = [
   { id: "reports", label: "Reports", icon: BarChart3 },
 ];
 
+const RECENT_PROJECTS = [
+  { id: "PJ1", name: "Nexus Core", color: "#4F46E5" },
+  { id: "PJ2", name: "Mobile App", color: "#10B981" },
+  { id: "PJ3", name: "Marketing Site", color: "#F59E0B" },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
@@ -220,6 +226,48 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           );
         })}
+
+        <p
+          style={{
+            fontSize: "10px",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "var(--text-muted)",
+            padding: "24px 12px 8px",
+            marginBottom: "4px",
+          }}
+        >
+          Recent Projects
+        </p>
+        <div style={{ padding: "0 12px" }}>
+          {RECENT_PROJECTS.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => {
+                setActiveTab("projects");
+                // In a real app, we'd filter by this project
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                marginBottom: "2px",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-subtle)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.color }} />
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-main)" }}>
+                {p.name}
+              </span>
+            </div>
+          ))}
+        </div>
       </nav>
 
       {/* Upgrade Banner */}

@@ -4,20 +4,22 @@ import { X, Mail, User } from "lucide-react";
 interface InviteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onInvite: (member: { email: string; name: string }) => void;
+  onInvite: (member: { email: string; name: string; role: string }) => void;
 }
 
 const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, onInvite }) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState("EMPLOYEE");
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onInvite({ email, name });
+    onInvite({ email, name, role });
     setEmail("");
     setName("");
+    setRole("EMPLOYEE");
     onClose();
   };
 
@@ -49,6 +51,20 @@ const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, onInvite }) 
                 placeholder="e.g., Sarah Connor"
                 />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Role</label>
+            <select
+              className="form-input"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+               <option value="ADMIN">Admin</option>
+               <option value="MANAGER">Manager</option>
+               <option value="TEAM_LEAD">Team Lead</option>
+               <option value="EMPLOYEE">Employee</option>
+            </select>
           </div>
 
           <div className="form-group">

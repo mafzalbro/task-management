@@ -29,4 +29,6 @@ export interface IUserRepository {
   findByAuth0Id(auth0Id: string): Promise<User | null>;
   findAll(): Promise<User[]>;
   create(user: Partial<User>): Promise<User>;
+  update(id: string, user: Partial<User>): Promise<User>;
+  findByManager(managerId: string): Promise<User[]>;
 }

@@ -12,6 +12,13 @@ export const typeDefs = `#graphql
     HIGH
   }
 
+  enum UserRole {
+    ADMIN
+    MANAGER
+    TEAM_LEAD
+    EMPLOYEE
+  }
+
   type Task {
     id: ID!
     title: String!
@@ -48,6 +55,10 @@ export const typeDefs = `#graphql
     name: String!
     avatarUrl: String
     auth0Id: String!
+    role: UserRole!
+    managerId: String
+    manager: User
+    reports: [User]
     createdAt: String!
   }
 
@@ -159,7 +170,9 @@ export const typeDefs = `#graphql
     deleteNote(id: ID!): Boolean
 
     syncUser(email: String!, name: String!, avatarUrl: String): User
-    inviteUser(email: String!, name: String!): User
+    inviteUser(email: String!, name: String!, role: UserRole): User
+    updateUserRole(id: ID!, role: UserRole!): User
+    assignManager(userId: ID!, managerId: ID!): User
     markNotificationAsRead(id: ID!): Notification
     markAllNotificationsAsRead: Boolean
   }

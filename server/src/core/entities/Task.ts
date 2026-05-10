@@ -26,12 +26,16 @@ export interface Project {
   updatedAt: Date;
 }
 
+export type UserRole = 'ADMIN' | 'MANAGER' | 'TEAM_LEAD' | 'EMPLOYEE';
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatarUrl?: string;
   auth0Id: string;
+  role: UserRole;
+  managerId?: string;
   createdAt: Date;
 }
 

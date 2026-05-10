@@ -8,6 +8,8 @@ const UserSchema = new Schema({
   name: { type: String, required: true },
   avatarUrl: { type: String },
   auth0Id: { type: String, required: true, unique: true },
+  role: { type: String, enum: ['ADMIN', 'MANAGER', 'TEAM_LEAD', 'EMPLOYEE'], default: 'EMPLOYEE' },
+  managerId: { type: String },
 }, { timestamps: true });
 
 export const UserModel = mongoose.model<IUserDocument>('User', UserSchema);
