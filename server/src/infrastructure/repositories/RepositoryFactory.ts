@@ -3,6 +3,7 @@ import { MongoAuditLogRepository } from './MongoAuditLogRepository.js';
 import { MongoNoteRepository } from './MongoNoteRepository.js';
 import { MongoProjectRepository } from './MongoProjectRepository.js';
 import { MongoUserRepository } from './MongoUserRepository.js';
+import { MongoNotificationRepository } from './MongoNotificationRepository.js';
 
 export class RepositoryFactory {
   static getTaskRepository() {
@@ -50,6 +51,16 @@ export class RepositoryFactory {
     switch (dbType) {
       case 'mongodb':
         return new MongoUserRepository();
+      default:
+        throw new Error(`Unsupported database type: ${dbType}`);
+    }
+  }
+
+  static getNotificationRepository() {
+    const dbType = process.env.DB_TYPE || 'mongodb';
+    switch (dbType) {
+      case 'mongodb':
+        return new MongoNotificationRepository();
       default:
         throw new Error(`Unsupported database type: ${dbType}`);
     }

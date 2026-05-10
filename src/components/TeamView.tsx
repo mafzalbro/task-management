@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Mail, MoreHorizontal } from "lucide-react";
-import { useQuery } from "@apollo/client";
-import { GET_TEAM } from "../graphql/operations";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_TEAM, INVITE_USER } from "../graphql/operations";
 import InviteModal from "./InviteModal";
+import { useToast } from "../contexts/ToastContext";
 
 const STATUS_COLORS: Record<string, string> = {
   online: "var(--success)",
@@ -12,13 +13,20 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const TeamView: React.FC = () => {
-  const { data, loading } = useQuery(GET_TEAM);
+  const { showToast } = useToast();
+  const { data, loading, refetch } = useQuery(GET_TEAM);
+  const [inviteUser] = useMutation(INVITE_USER);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const users = data?.users || [];
 
-  const handleInvite = (member: { email: string; name: string }) => {
-    console.log("Inviting member:", member);
-    // In a real app, call a mutation here
+  const handleInvite = async (member: { email: string; name: string }) => {
+    try {
+      await inviteUser({ variables: { email: member.email, name: member.name } });
+      showToast(`${member.name} has been invited!`, 'success');
+      refetch();
+    } catch (err: any) {
+      showToast(`Failed to invite: ${err.message}`, 'error');
+    }
   };
 
   if (loading) return <div className="main-content">Loading team...</div>;

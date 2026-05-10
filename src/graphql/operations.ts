@@ -21,6 +21,70 @@ export const GET_TASKS = gql`
   }
 `;
 
+export const GET_AUDIT_LOGS = gql`
+  query GetAuditLogs($entityType: String!, $entityId: String!) {
+    auditLogs(entityType: $entityType, entityId: $entityId) {
+      id
+      action
+      userId
+      createdAt
+      previousData
+      newData
+    }
+  }
+`;
+
+export const INVITE_USER = gql`
+  mutation InviteUser($email: String!, $name: String!) {
+    inviteUser(email: $email, name: $name) {
+      id
+      name
+      email
+    }
+  }
+`;
+
+export const GET_NOTIFICATIONS = gql`
+  query GetNotifications {
+    notifications {
+      id
+      title
+      message
+      type
+      read
+      createdAt
+    }
+  }
+`;
+
+export const MARK_NOTIFICATION_READ = gql`
+  mutation MarkNotificationRead($id: ID!) {
+    markNotificationAsRead(id: $id) {
+      id
+      read
+    }
+  }
+`;
+
+export const MARK_ALL_NOTIFICATIONS_READ = gql`
+  mutation MarkAllRead {
+    markAllNotificationsAsRead
+  }
+`;
+
+export const NOTIFICATION_CREATED_SUBSCRIPTION = gql`
+  subscription OnNotificationCreated {
+    notificationCreated {
+      id
+      title
+      message
+      type
+      read
+      createdAt
+    }
+  }
+`;
+
 export const DELETE_PROJECT = gql`
   mutation DeleteProject($id: ID!) {
     deleteProject(id: $id)

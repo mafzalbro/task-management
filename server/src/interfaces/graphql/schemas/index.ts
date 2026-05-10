@@ -73,6 +73,16 @@ export const typeDefs = `#graphql
     updatedAt: String!
   }
 
+  type Notification {
+    id: ID!
+    userId: String!
+    title: String!
+    message: String!
+    type: String!
+    read: Boolean!
+    createdAt: String!
+  }
+
   type Analytics {
     totalTasks: Int!
     completedTasks: Int!
@@ -98,6 +108,7 @@ export const typeDefs = `#graphql
     notes(projectId: String, taskId: String): [Note]
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
     projectAnalytics(projectId: String!): Analytics
+    notifications: [Notification]
   }
 
   type Mutation {
@@ -148,6 +159,9 @@ export const typeDefs = `#graphql
     deleteNote(id: ID!): Boolean
 
     syncUser(email: String!, name: String!, avatarUrl: String): User
+    inviteUser(email: String!, name: String!): User
+    markNotificationAsRead(id: ID!): Notification
+    markAllNotificationsAsRead: Boolean
   }
 
   type Subscription {
@@ -155,5 +169,6 @@ export const typeDefs = `#graphql
     taskUpdated(projectId: String): Task
     projectCreated: Project
     noteCreated(projectId: String, taskId: String): Note
+    notificationCreated: Notification
   }
 `;

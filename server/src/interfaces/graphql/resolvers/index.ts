@@ -10,6 +10,7 @@ const auditLogRepository = RepositoryFactory.getAuditLogRepository();
 const noteRepository = RepositoryFactory.getNoteRepository();
 const projectRepository = RepositoryFactory.getProjectRepository();
 const userRepository = RepositoryFactory.getUserRepository();
+const notificationRepository = RepositoryFactory.getNotificationRepository();
 
 const getTasksUC = new GetTasksUseCase(taskRepository);
 const createTaskUC = new CreateTaskUseCase(taskRepository);
@@ -48,6 +49,11 @@ export const resolvers = {
     },
     auditLogs: (_: any, { entityType, entityId }: any) => {
       return auditLogRepository.findByEntity(entityType, entityId);
+    },
+    notifications: (_: any, __: any, context: any) => {
+      const auth0Id = context.userId;
+      if (!auth0Id || auth0Id === 'guest-user') return [];
+      return notificationRepository.findAllByUserId(auth0Id);
     },
     projectAnalytics: async (_: any, { projectId }: any) => {
       const tasks = await taskRepository.findAll({ projectId });
@@ -97,13 +103,24 @@ export const resolvers = {
         const userId = context.userId || 'system-user';
         const task = await createTaskUC.execute({ ...args, creatorId: userId });
 
-      await auditLogRepository.create({
-        entityType: 'TASK',
-        entityId: task.id,
-        action: 'CREATE',
-        userId,
-        newData: task
-      });
+        await auditLogRepository.create({
+          entityType: 'TASK',
+          entityId: task.id,
+          action: 'CREATE',
+          userId,
+          newData: task
+        });
+
+        // Trigger notification if assigned to someone else
+        if (task.assigneeId && task.assigneeId !== userId) {
+          const notification = await notificationRepository.create({
+            userId: task.assigneeId,
+            title: 'New Task Assigned',
+            message: `You have been assigned to: ${task.title}`,
+            type: 'TASK_ASSIGNED'
+          });
+          pubsub.publish('NOTIFICATION_CREATED', { notificationCreated: notification });
+        }
 
         pubsub.publish('TASK_CREATED', { taskCreated: task });
         return task;
@@ -118,14 +135,25 @@ export const resolvers = {
         const oldTask = await taskRepository.findById(id);
         const task = await updateTaskUC.execute(id, updates);
 
-      await auditLogRepository.create({
-        entityType: 'TASK',
-        entityId: id,
-        action: 'UPDATE',
-        userId,
-        previousData: oldTask,
-        newData: task
-      });
+        await auditLogRepository.create({
+          entityType: 'TASK',
+          entityId: id,
+          action: 'UPDATE',
+          userId,
+          previousData: oldTask,
+          newData: task
+        });
+
+        // Notify assignee if status changed
+        if (task.assigneeId && updates.status && updates.status !== oldTask?.status) {
+          const notification = await notificationRepository.create({
+            userId: task.assigneeId,
+            title: 'Task Status Updated',
+            message: `Task "${task.title}" is now ${task.status}`,
+            type: 'TASK_STATUS_UPDATED'
+          });
+          pubsub.publish('NOTIFICATION_CREATED', { notificationCreated: notification });
+        }
 
         pubsub.publish('TASK_UPDATED', { taskUpdated: task });
         return task;
@@ -181,6 +209,34 @@ export const resolvers = {
         return user;
       }
       return userRepository.create({ ...args, auth0Id });
+    },
+    inviteUser: async (_: any, { email, name }: any, context: any) => {
+      const existing = await userRepository.findByEmail(email);
+      if (existing) return existing;
+
+      const newUser = await userRepository.create({
+        email,
+        name,
+        auth0Id: `invited|${Date.now()}`, // Temporary ID
+      });
+
+      // Notify the invited user (simulated persistent notification)
+      await notificationRepository.create({
+        userId: newUser.auth0Id,
+        title: 'Welcome to Zenith!',
+        message: `You have been invited to join the workspace by ${context.userId || 'a team member'}.`,
+        type: 'WORKSPACE_INVITE'
+      });
+
+      return newUser;
+    },
+    markNotificationAsRead: async (_: any, { id }: any) => {
+      return notificationRepository.markAsRead(id);
+    },
+    markAllNotificationsAsRead: async (_: any, __: any, context: any) => {
+      const auth0Id = context.userId;
+      if (!auth0Id || auth0Id === 'guest-user') return false;
+      return notificationRepository.markAllAsRead(auth0Id);
     }
   },
   Subscription: {
@@ -195,6 +251,9 @@ export const resolvers = {
     },
     noteCreated: {
       subscribe: () => (pubsub as any).asyncIterator(['NOTE_CREATED'])
+    },
+    notificationCreated: {
+      subscribe: () => (pubsub as any).asyncIterator(['NOTIFICATION_CREATED'])
     }
   }
 };
