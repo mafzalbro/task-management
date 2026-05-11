@@ -23,6 +23,7 @@ export interface Task {
   energyLevel?: 'LOW' | 'MEDIUM' | 'HIGH'; // For energy-based scheduling
   tags?: string[];
   sprintId?: string;
+  epicId?: string;
 }
 
 export interface Sprint {

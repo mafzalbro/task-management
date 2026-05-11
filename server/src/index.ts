@@ -4,7 +4,7 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/use/ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import express, { Request } from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -52,14 +52,14 @@ async function startServer() {
   const serverCleanup = useServer(
     {
       schema,
-      onConnect: async (ctx) => {
+      onConnect: async (ctx: any) => {
         console.log('WS Connected');
       },
-      onDisconnect(ctx, code, reason) {
+      onDisconnect(ctx: any, code: any, reason: any) {
         console.log('WS Disconnected');
       },
     },
-    wsServer
+    wsServer as any
   );
 
   const server = new ApolloServer({
