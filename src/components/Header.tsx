@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, Bell, Plus, ChevronDown } from "lucide-react";
+import { Search, Bell, Plus, ChevronDown, Clock } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useQuery, useMutation, useSubscription } from "@apollo/client";
+import { GET_NOTIFICATIONS, MARK_NOTIFICATION_READ, MARK_ALL_NOTIFICATIONS_READ, NOTIFICATION_CREATED_SUBSCRIPTION } from "../graphql/operations";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {
   title: string;
@@ -20,37 +23,15 @@ const Header: React.FC<HeaderProps> = ({
   const { logout } = useAuth0();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      icon: "🎯",
-      text: "API Documentation moved to Review",
-      time: "2m ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      icon: "👥",
-      text: "Sam assigned a task to you",
-      time: "15m ago",
-      unread: true,
-    },
-    {
-      id: 3,
-      icon: "✅",
-      text: "Marketing Research marked complete",
-      time: "1h ago",
-      unread: false,
-    },
-    {
-      id: 4,
-      icon: "📅",
-      text: "Landing Page deadline is tomorrow",
-      time: "3h ago",
-      unread: false,
-    },
-  ]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: notifData, refetch: refetchNotifs } = useQuery(GET_NOTIFICATIONS);
+  const [markRead] = useMutation(MARK_NOTIFICATION_READ);
+  const [markAllRead] = useMutation(MARK_ALL_NOTIFICATIONS_READ);
+
+  useSubscription(NOTIFICATION_CREATED_SUBSCRIPTION, {
+    onData: () => refetchNotifs()
+  });
 
   useEffect(() => {
     const handleFocus = () => inputRef.current?.focus();
@@ -58,8 +39,18 @@ const Header: React.FC<HeaderProps> = ({
     return () => window.removeEventListener("focus-search", handleFocus);
   }, []);
 
+  const notifications = notifData?.notifications || [];
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const handleMarkRead = async (id: string) => {
+    await markRead({ variables: { id } });
+    refetchNotifs();
+  };
+
+  const handleMarkAllRead = async () => {
+    await markAllRead();
+    refetchNotifs();
+  };
 
   return (
     <header
@@ -218,6 +209,7 @@ const Header: React.FC<HeaderProps> = ({
                 : "var(--bg-subtle)",
               borderColor: showNotif ? "var(--primary)" : "transparent",
               color: showNotif ? "var(--primary)" : "inherit",
+              position: 'relative'
             }}
           >
             <Bell size={18} strokeWidth={2} />
@@ -245,121 +237,89 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {showNotif && (
-            <div
-              className="stat-card"
-              style={{
-                position: "absolute",
-                top: "calc(100% + 12px)",
-                right: 0,
-                width: 340,
-                padding: 0,
-                boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
-                zIndex: 100,
-                overflow: "hidden",
-              }}
-            >
-              <div
+          <AnimatePresence>
+            {showNotif && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="stat-card"
                 style={{
-                  padding: "16px 20px",
-                  borderBottom: "1px solid var(--border-light)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  position: "absolute",
+                  top: "calc(100% + 12px)",
+                  right: 0,
+                  width: 340,
+                  padding: 0,
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+                  zIndex: 100,
+                  overflow: "hidden",
                 }}
               >
-                <span style={{ fontWeight: 800, fontSize: "15px" }}>
-                  Notifications
-                </span>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <span
-                    onClick={() => setNotifications(notifications.map(n => ({ ...n, unread: false })))}
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--primary)",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Mark all as read
+                <div
+                  style={{
+                    padding: "16px 20px",
+                    borderBottom: "1px solid var(--border-light)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    background: 'var(--bg-subtle)'
+                  }}
+                >
+                  <span style={{ fontWeight: 800, fontSize: "15px" }}>
+                    Notifications
                   </span>
-                  <span
-                    onClick={() => setNotifications([])}
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--danger)",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Clear all
-                  </span>
-                </div>
-              </div>
-              <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      padding: "14px 20px",
-                      alignItems: "flex-start",
-                      background: n.unread ? "var(--primary-light)" : "#fff",
-                      borderBottom: "1px solid var(--border-light)",
-                      cursor: "pointer",
-                      transition: "background 0.15s ease",
-                    }}
-                    onMouseEnter={(e) =>
-                      !n.unread &&
-                      (e.currentTarget.style.background = "var(--bg-subtle)")
-                    }
-                    onMouseLeave={(e) =>
-                      !n.unread && (e.currentTarget.style.background = "#fff")
-                    }
-                  >
-                    <span style={{ fontSize: "20px", flexShrink: 0 }}>
-                      {n.icon}
+                  {unreadCount > 0 && (
+                    <span
+                      onClick={handleMarkAllRead}
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--primary)",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Mark all as read
                     </span>
-                    <div style={{ flex: 1 }}>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: n.unread ? 700 : 500,
-                          color: "var(--text-main)",
-                          lineHeight: 1.4,
-                          marginBottom: "2px",
-                        }}
-                      >
-                        {n.text}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--text-muted)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {n.time}
-                      </p>
+                  )}
+                </div>
+                <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                       <Bell size={32} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                       <p style={{ fontSize: '13px', fontWeight: 500 }}>All caught up!</p>
                     </div>
-                    {n.unread && (
-                      <span
+                  ) : (
+                    notifications.map((n: any) => (
+                      <div
+                        key={n.id}
+                        onClick={() => handleMarkRead(n.id)}
                         style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          background: "var(--primary)",
-                          flexShrink: 0,
-                          marginTop: "4px",
+                          padding: "14px 20px",
+                          alignItems: "flex-start",
+                          background: n.read ? "#fff" : "var(--primary-light)",
+                          borderBottom: "1px solid var(--border-light)",
+                          cursor: "pointer",
+                          transition: "background 0.15s ease",
                         }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div className="flex justify-between items-start" style={{ marginBottom: '4px' }}>
+                            <p style={{ fontSize: "13px", fontWeight: 800, color: "var(--text-main)" }}>{n.title}</p>
+                            {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', marginTop: '4px' }} />}
+                          </div>
+                          <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.4, marginBottom: "8px" }}>{n.message}</p>
+                          <div className="flex items-center gap-1" style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>
+                            <Clock size={12} />
+                            {new Date(parseInt(n.createdAt)).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Profile */}
@@ -445,7 +405,6 @@ const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex-col gap-1">
                 <div
-                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
                   style={{
                     padding: "10px 12px",
                     borderRadius: "8px",
@@ -463,6 +422,7 @@ const Header: React.FC<HeaderProps> = ({
                   Profile Settings
                 </div>
                 <div
+                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
                   style={{
                     padding: "10px 12px",
                     borderRadius: "8px",

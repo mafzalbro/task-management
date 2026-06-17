@@ -12,6 +12,13 @@ export const typeDefs = `#graphql
     HIGH
   }
 
+  enum UserRole {
+    ADMIN
+    MANAGER
+    TEAM_LEAD
+    EMPLOYEE
+  }
+
   type Task {
     id: ID!
     title: String!
@@ -48,6 +55,10 @@ export const typeDefs = `#graphql
     name: String!
     avatarUrl: String
     auth0Id: String!
+    role: UserRole!
+    managerId: String
+    manager: User
+    reports: [User]
     createdAt: String!
   }
 
@@ -71,6 +82,16 @@ export const typeDefs = `#graphql
     creatorId: String!
     createdAt: String!
     updatedAt: String!
+  }
+
+  type Notification {
+    id: ID!
+    userId: String!
+    title: String!
+    message: String!
+    type: String!
+    read: Boolean!
+    createdAt: String!
   }
 
   type Analytics {
@@ -98,6 +119,7 @@ export const typeDefs = `#graphql
     notes(projectId: String, taskId: String): [Note]
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
     projectAnalytics(projectId: String!): Analytics
+    notifications: [Notification]
   }
 
   type Mutation {
@@ -148,6 +170,11 @@ export const typeDefs = `#graphql
     deleteNote(id: ID!): Boolean
 
     syncUser(email: String!, name: String!, avatarUrl: String): User
+    inviteUser(email: String!, name: String!, role: UserRole): User
+    updateUserRole(id: ID!, role: UserRole!): User
+    assignManager(userId: ID!, managerId: ID!): User
+    markNotificationAsRead(id: ID!): Notification
+    markAllNotificationsAsRead: Boolean
   }
 
   type Subscription {
@@ -155,5 +182,6 @@ export const typeDefs = `#graphql
     taskUpdated(projectId: String): Task
     projectCreated: Project
     noteCreated(projectId: String, taskId: String): Note
+    notificationCreated: Notification
   }
 `;

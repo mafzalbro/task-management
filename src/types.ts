@@ -10,6 +10,7 @@ export type Post = {
   dueDate: string;
   projectId: string;
   assignee: string;
+  assigneeId?: string;
 };
 
 export type Stat = {

@@ -7,6 +7,7 @@ import {
   Clock,
   AlertTriangle,
   TrendingUp,
+  ChevronRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -18,8 +19,8 @@ import {
   Tooltip,
 } from "recharts";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useMutation } from "@apollo/client";
-import { SYNC_USER } from "../graphql/operations";
+import { useMutation, useQuery } from "@apollo/client";
+import { SYNC_USER, GET_TEAM } from "../graphql/operations";
 
 interface DashboardProps {
   tasks: Post[];
@@ -28,6 +29,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
   const { user, isAuthenticated } = useAuth0();
   const [syncUser] = useMutation(SYNC_USER);
+  const { data: teamData } = useQuery(GET_TEAM);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -396,6 +398,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }}>
       <div className="stat-card" style={{ padding: "32px" }}>
         <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "24px" }}>Recent Tasks</h3>
         <table
@@ -462,6 +465,39 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="stat-card" style={{ padding: '32px' }}>
+         <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px' }}>Team Overview</h3>
+         <div className="flex-col gap-4">
+            {teamData?.users?.slice(0, 5).map((member: any) => {
+               const memberTasks = tasks.filter(t => t.assigneeId === member.id);
+               const done = memberTasks.filter(t => t.status === 'Completed').length;
+               const total = memberTasks.length;
+               const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+               return (
+                 <div key={member.id} className="flex items-center gap-4">
+                    <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800 }}>
+                       {member.name[0]}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                       <div className="flex justify-between items-center" style={{ marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 700 }}>{member.name}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{pct}%</span>
+                       </div>
+                       <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', borderRadius: '10px' }} />
+                       </div>
+                    </div>
+                 </div>
+               );
+            })}
+            <button className="btn-secondary" style={{ marginTop: '12px', width: '100%', justifyContent: 'center' }}>
+               View Full Team <ChevronRight size={16} />
+            </button>
+         </div>
+      </div>
       </div>
     </div>
   );

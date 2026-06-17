@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import TaskBoard from "./components/TaskBoard";
 import TaskModal from "./components/TaskModal";
+import TaskDetailDrawer from "./components/modals/TaskDetailDrawer";
 import ProjectsView from "./components/ProjectsView";
 import CalendarView from "./components/CalendarView";
 import TeamView from "./components/TeamView";
@@ -51,7 +52,7 @@ const pageVariants: Variants = {
 
 function App() {
   const { showToast } = useToast();
-  const { data, loading, refetch, error: queryError } = useQuery(GET_TASKS, {
+  const { data, loading, refetch } = useQuery(GET_TASKS, {
     onError: (err) => showToast(`Failed to load tasks: ${err.message}`, 'error')
   });
   const [createTask] = useMutation(CREATE_TASK, {
@@ -83,6 +84,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
   const mapStatusToUI = (status: string): Post["status"] => {
@@ -166,7 +168,7 @@ function App() {
   };
   const openEdit = (task: Post) => {
     setEditTask(task);
-    setIsModalOpen(true);
+    setIsDrawerOpen(true);
   };
   const handleDelete = async (id: string) => {
     try {
@@ -348,6 +350,14 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         editTask={editTask}
+      />
+
+      <TaskDetailDrawer
+        isOpen={isDrawerOpen}
+        task={editTask}
+        onClose={() => setIsDrawerOpen(false)}
+        onDelete={handleDelete}
+        onStatusChange={updateTaskStatus}
       />
 
       <CommandPalette

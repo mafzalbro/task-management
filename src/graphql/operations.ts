@@ -21,6 +21,93 @@ export const GET_TASKS = gql`
   }
 `;
 
+export const GET_AUDIT_LOGS = gql`
+  query GetAuditLogs($entityType: String!, $entityId: String!) {
+    auditLogs(entityType: $entityType, entityId: $entityId) {
+      id
+      action
+      userId
+      createdAt
+      previousData
+      newData
+    }
+  }
+`;
+
+export const INVITE_USER = gql`
+  mutation InviteUser($email: String!, $name: String!, $role: UserRole) {
+    inviteUser(email: $email, name: $name, role: $role) {
+      id
+      name
+      email
+      role
+    }
+  }
+`;
+
+export const UPDATE_USER_ROLE = gql`
+  mutation UpdateUserRole($id: ID!, $role: UserRole!) {
+    updateUserRole(id: $id, role: $role) {
+      id
+      role
+    }
+  }
+`;
+
+export const ASSIGN_MANAGER = gql`
+  mutation AssignManager($userId: ID!, $managerId: ID!) {
+    assignManager(userId: $userId, managerId: $managerId) {
+      id
+      managerId
+      manager {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const GET_NOTIFICATIONS = gql`
+  query GetNotifications {
+    notifications {
+      id
+      title
+      message
+      type
+      read
+      createdAt
+    }
+  }
+`;
+
+export const MARK_NOTIFICATION_READ = gql`
+  mutation MarkNotificationRead($id: ID!) {
+    markNotificationAsRead(id: $id) {
+      id
+      read
+    }
+  }
+`;
+
+export const MARK_ALL_NOTIFICATIONS_READ = gql`
+  mutation MarkAllRead {
+    markAllNotificationsAsRead
+  }
+`;
+
+export const NOTIFICATION_CREATED_SUBSCRIPTION = gql`
+  subscription OnNotificationCreated {
+    notificationCreated {
+      id
+      title
+      message
+      type
+      read
+      createdAt
+    }
+  }
+`;
+
 export const DELETE_PROJECT = gql`
   mutation DeleteProject($id: ID!) {
     deleteProject(id: $id)
@@ -61,6 +148,16 @@ export const GET_TEAM = gql`
       name
       email
       avatarUrl
+      role
+      managerId
+      manager {
+        id
+        name
+      }
+      reports {
+        id
+        name
+      }
       createdAt
     }
   }

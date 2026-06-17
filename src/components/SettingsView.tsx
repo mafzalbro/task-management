@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Bell, Palette, Shield, Save, Check } from "lucide-react";
+import { Save, Check } from "lucide-react";
 import { useToast } from "../contexts/ToastContext";
 
 interface SettingsViewProps {

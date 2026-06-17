@@ -1,4 +1,11 @@
-import { Task, Project, User } from '../entities/Task.js';
+import { Task, Project, User, Notification } from '../entities/Task.js';
+
+export interface INotificationRepository {
+  findAllByUserId(userId: string): Promise<Notification[]>;
+  create(notification: Partial<Notification>): Promise<Notification>;
+  markAsRead(id: string): Promise<Notification>;
+  markAllAsRead(userId: string): Promise<boolean>;
+}
 
 export interface ITaskRepository {
   findById(id: string): Promise<Task | null>;
@@ -22,4 +29,6 @@ export interface IUserRepository {
   findByAuth0Id(auth0Id: string): Promise<User | null>;
   findAll(): Promise<User[]>;
   create(user: Partial<User>): Promise<User>;
+  update(id: string, user: Partial<User>): Promise<User>;
+  findByManager(managerId: string): Promise<User[]>;
 }
