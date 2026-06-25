@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { Post, Stat } from "../types";
 import {
   ArrowUpRight,
@@ -17,35 +17,43 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useMutation } from "@apollo/client";
+import { SYNC_USER } from "../graphql/operations";
 
 interface DashboardProps {
   tasks: Post[];
 }
 
-const chartData = [
-  { name: "Mon", completed: 4, added: 6 },
-  { name: "Tue", completed: 7, added: 5 },
-  { name: "Wed", completed: 5, added: 8 },
-  { name: "Thu", completed: 10, added: 7 },
-  { name: "Fri", completed: 8, added: 4 },
-  { name: "Sat", completed: 3, added: 2 },
-  { name: "Sun", completed: 6, added: 3 },
-];
-
 const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
+  const { user, isAuthenticated } = useAuth0();
+  const [syncUser] = useMutation(SYNC_USER);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      syncUser({
+        variables: {
+          email: user.email,
+          name: user.name || user.nickname,
+          avatarUrl: user.picture
+        }
+      }).catch(console.error);
+    }
+  }, [isAuthenticated, user, syncUser]);
+
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === "Completed").length;
   const inProgress = tasks.filter((t) => t.status === "In Progress").length;
   const overdue = tasks.filter(
-    (t) => t.status === "To Do" && new Date(t.dueDate) < new Date(),
+    (t) => t.status === "To Do" && t.dueDate && new Date(t.dueDate) < new Date(),
   ).length;
   const progressPct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const stats: Stat[] = [
-    { title: "Total Tasks", value: total, diff: "+12%", isPositive: true },
-    { title: "Completed", value: completed, diff: "+8%", isPositive: true },
-    { title: "In Progress", value: inProgress, diff: "-4%", isPositive: false },
-    { title: "Overdue", value: overdue, diff: "+2", isPositive: false },
+    { title: "Total Tasks", value: total, diff: "Live", isPositive: true },
+    { title: "Completed", value: completed, diff: `${progressPct}%`, isPositive: true },
+    { title: "In Progress", value: inProgress, diff: "Active", isPositive: true },
+    { title: "Overdue", value: overdue, diff: "Attention", isPositive: false },
   ];
 
   const statIcons = [TrendingUp, CheckCircle2, Clock, AlertTriangle];
@@ -68,9 +76,16 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
     )
     .slice(0, 4);
 
+  // Generate dynamic chart data based on tasks
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const chartData = days.map(day => ({
+    name: day,
+    completed: tasks.filter(t => t.status === "Completed" && t.dueDate && days[new Date(t.dueDate).getDay()] === day).length,
+    added: tasks.filter(t => t.dueDate && days[new Date(t.dueDate).getDay()] === day).length
+  }));
+
   return (
     <div className="main-content">
-      {/* Welcome Banner */}
       <div style={{ marginBottom: "40px" }}>
         <h2
           style={{
@@ -80,7 +95,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
             marginBottom: "8px",
           }}
         >
-          Good morning, Alex 👋
+          Good morning, {user?.name || "Alex"} 👋
         </h2>
         <p
           style={{
@@ -101,7 +116,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="stats-grid">
         {stats.map((stat, i) => {
           const Icon = statIcons[i];
@@ -163,7 +177,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
         })}
       </div>
 
-      {/* Chart + Panel */}
       <div
         style={{
           display: "grid",
@@ -172,7 +185,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
           marginBottom: "40px",
         }}
       >
-        {/* Chart */}
         <div className="stat-card" style={{ padding: "32px" }}>
           <div
             className="flex justify-between items-center"
@@ -195,41 +207,8 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                   fontWeight: 500,
                 }}
               >
-                Tasks completed vs added this week
+                Tasks distribution across the week
               </p>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "20px",
-                fontSize: "13px",
-                fontWeight: 600,
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--primary)",
-                    display: "inline-block",
-                  }}
-                />{" "}
-                Completed
-              </span>
-              <span className="flex items-center gap-2">
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--warning)",
-                    display: "inline-block",
-                  }}
-                />{" "}
-                Added
-              </span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={260}>
@@ -247,18 +226,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                   <stop
                     offset="100%"
                     stopColor="var(--primary)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-                <linearGradient id="gradWarning" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="var(--warning)"
-                    stopOpacity={0.1}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--warning)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -305,13 +272,12 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                 stroke="var(--warning)"
                 strokeWidth={2}
                 strokeDasharray="4 2"
-                fill="url(#gradWarning)"
+                fill="none"
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Overall Progress Panel */}
         <div className="stat-card flex-col gap-6" style={{ padding: "32px" }}>
           <div>
             <h3
@@ -330,7 +296,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
             </p>
           </div>
 
-          {/* Radial-style Progress */}
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <svg
               viewBox="0 0 120 120"
@@ -357,9 +322,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                 strokeDashoffset={`${2 * Math.PI * 52 * (1 - progressPct / 100)}`}
                 strokeLinecap="round"
                 transform="rotate(-90 60 60)"
-                style={{
-                  transition: "stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)",
-                }}
               />
               <text
                 x="60"
@@ -385,7 +347,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
             </svg>
           </div>
 
-          {/* Status Breakdown */}
           <div className="flex-col gap-3">
             {(["To Do", "In Progress", "Review", "Completed"] as const).map(
               (s) => {
@@ -424,7 +385,6 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                           width: `${pct}%`,
                           background: colors[s],
                           borderRadius: "10px",
-                          transition: "width 0.8s ease",
                         }}
                       />
                     </div>
@@ -436,26 +396,8 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
         </div>
       </div>
 
-      {/* Recent Tasks Table */}
       <div className="stat-card" style={{ padding: "32px" }}>
-        <div
-          className="flex justify-between items-center"
-          style={{ marginBottom: "24px" }}
-        >
-          <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Recent Tasks</h3>
-          <button
-            style={{
-              fontSize: "14px",
-              fontWeight: 700,
-              color: "var(--primary)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            View All →
-          </button>
-        </div>
+        <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "24px" }}>Recent Tasks</h3>
         <table
           style={{
             width: "100%",
@@ -465,14 +407,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
         >
           <thead>
             <tr style={{ textAlign: "left" }}>
-              {[
-                "Task",
-                "Project",
-                "Assignee",
-                "Due Date",
-                "Priority",
-                "Status",
-              ].map((h) => (
+              {["Task", "Assignee", "Due Date", "Priority", "Status"].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -501,66 +436,11 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                       : "none",
                 }}
               >
-                <td
-                  style={{
-                    padding: "14px 0",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                  }}
-                >
-                  {task.title}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 0",
-                    fontSize: "14px",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {task.projectId}
-                </td>
+                <td style={{ padding: "14px 0", fontWeight: 600, fontSize: "14px" }}>{task.title}</td>
+                <td style={{ padding: "14px 0" }}>{task.assignee}</td>
+                <td style={{ padding: "14px 0", fontSize: "14px", color: "var(--text-muted)" }}>{task.dueDate}</td>
                 <td style={{ padding: "14px 0" }}>
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "14px",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "6px",
-                        background: "var(--primary-light)",
-                        color: "var(--primary)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "11px",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {task.assignee[0]}
-                    </span>
-                    {task.assignee}
-                  </span>
-                </td>
-                <td
-                  style={{
-                    padding: "14px 0",
-                    fontSize: "14px",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {task.dueDate}
-                </td>
-                <td style={{ padding: "14px 0" }}>
-                  <span
-                    className={`badge badge-${task.priority.toLowerCase()}`}
-                  >
+                  <span className={`badge badge-${task.priority.toLowerCase()}`}>
                     {task.priority}
                   </span>
                 </td>
@@ -571,22 +451,8 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks }) => {
                       fontWeight: 700,
                       padding: "4px 12px",
                       borderRadius: "20px",
-                      background:
-                        task.status === "Completed"
-                          ? "var(--success-bg)"
-                          : task.status === "In Progress"
-                            ? "var(--warning-bg)"
-                            : task.status === "Review"
-                              ? "var(--primary-light)"
-                              : "var(--bg-subtle)",
-                      color:
-                        task.status === "Completed"
-                          ? "var(--success)"
-                          : task.status === "In Progress"
-                            ? "var(--warning)"
-                            : task.status === "Review"
-                              ? "var(--primary)"
-                              : "var(--text-muted)",
+                      background: task.status === "Completed" ? "var(--success-bg)" : "var(--bg-subtle)",
+                      color: task.status === "Completed" ? "var(--success)" : "var(--text-muted)",
                     }}
                   >
                     {task.status}

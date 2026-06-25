@@ -1,37 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Post } from "../types";
 import { FolderOpen, MoreHorizontal, Users, CheckCircle2 } from "lucide-react";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_PROJECTS, CREATE_PROJECT } from "../graphql/operations";
+import ProjectModal from "./ProjectModal";
 
 interface ProjectsViewProps {
   tasks: Post[];
 }
-
-const PROJECTS = [
-  {
-    id: "PJ1",
-    name: "Product Redesign",
-    description: "Full UX overhaul of the core product surfaces.",
-    status: "Active",
-    color: "var(--primary)",
-    members: 4,
-  },
-  {
-    id: "PJ2",
-    name: "Marketing Campaign",
-    description: "Q2 digital marketing campaign for product launch.",
-    status: "In Review",
-    color: "var(--success)",
-    members: 3,
-  },
-  {
-    id: "PJ3",
-    name: "Infrastructure Migration",
-    description: "Migrate legacy infrastructure to Kubernetes.",
-    status: "Planned",
-    color: "var(--warning)",
-    members: 5,
-  },
-];
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   Active: { bg: "var(--success-bg)", text: "var(--success)" },
@@ -39,14 +15,19 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   Planned: { bg: "var(--warning-bg)", text: "var(--warning)" },
 };
 
-const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
-  const getProjectData = (id: string) => {
-    const pTasks = tasks.filter((t) => t.projectId === id);
-    const done = pTasks.filter((t) => t.status === "Completed").length;
-    const pct =
-      pTasks.length > 0 ? Math.round((done / pTasks.length) * 100) : 0;
-    return { total: pTasks.length, done, pct };
+const ProjectsView: React.FC<ProjectsViewProps> = () => {
+  const { data, loading, refetch } = useQuery(GET_PROJECTS);
+  const [createProject] = useMutation(CREATE_PROJECT);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const projects = data?.projects || [];
+
+  const handleSaveProject = async (project: { name: string; description: string }) => {
+    await createProject({ variables: { name: project.name, description: project.description } });
+    refetch();
   };
+
+  if (loading) return <div className="main-content">Loading projects...</div>;
 
   return (
     <div className="main-content">
@@ -75,7 +56,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
             Track and manage your active project portfolio.
           </p>
         </div>
-        <button className="btn-primary">
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
           <FolderOpen size={18} /> New Project
         </button>
       </div>
@@ -87,9 +68,14 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
           gap: "24px",
         }}
       >
-        {PROJECTS.map((project) => {
-          const { total, done, pct } = getProjectData(project.id);
-          const sc = statusColors[project.status];
+        {projects.map((project: any) => {
+          const pTasks = project.tasks || [];
+          const done = pTasks.filter((t: any) => t.status === "COMPLETED").length;
+          const total = pTasks.length;
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const status = total > 0 ? (pct === 100 ? "Completed" : "Active") : "Planned";
+          const color = "var(--primary)";
+          const sc = statusColors[status === "Completed" ? "Active" : status] || statusColors.Planned;
 
           return (
             <div
@@ -103,18 +89,17 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                 gap: "24px",
               }}
             >
-              {/* Top Row */}
               <div className="flex justify-between items-center">
                 <div
                   style={{
                     width: 52,
                     height: 52,
                     borderRadius: "var(--radius-md)",
-                    background: project.color + "15",
+                    background: color + "15",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: project.color,
+                    color: color,
                   }}
                 >
                   <FolderOpen size={24} />
@@ -124,7 +109,6 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                 </button>
               </div>
 
-              {/* Title + Status */}
               <div>
                 <div
                   className="flex items-center gap-2"
@@ -143,7 +127,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                       color: sc.text,
                     }}
                   >
-                    {project.status}
+                    {status}
                   </span>
                 </div>
                 <p
@@ -158,7 +142,6 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                 </p>
               </div>
 
-              {/* Progress */}
               <div>
                 <div
                   className="flex justify-between items-center"
@@ -183,7 +166,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                     style={{
                       height: "100%",
                       width: `${pct}%`,
-                      background: project.color,
+                      background: color,
                       borderRadius: "10px",
                       transition: "width 1s ease",
                     }}
@@ -191,7 +174,6 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div
                 className="flex justify-between items-center"
                 style={{
@@ -207,7 +189,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
                     fontWeight: 600,
                   }}
                 >
-                  <Users size={15} /> {project.members} members
+                  <Users size={15} /> {project.members?.length || 0} members
                 </span>
                 <span
                   className="flex items-center gap-2"
@@ -225,6 +207,12 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ tasks }) => {
           );
         })}
       </div>
+
+      <ProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveProject}
+      />
     </div>
   );
 };

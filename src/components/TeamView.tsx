@@ -1,58 +1,8 @@
-import React from "react";
-import { Mail, Github, MoreHorizontal } from "lucide-react";
-
-const MEMBERS = [
-  {
-    id: 1,
-    name: "Alex Rivera",
-    role: "Product Designer",
-    status: "online",
-    statusLabel: "Online",
-    tasks: 12,
-    initials: "AR",
-    color: "var(--primary)",
-  },
-  {
-    id: 2,
-    name: "Samantha Smith",
-    role: "Full-stack Engineer",
-    status: "away",
-    statusLabel: "Away",
-    tasks: 8,
-    initials: "SS",
-    color: "var(--success)",
-  },
-  {
-    id: 3,
-    name: "Jamie Chen",
-    role: "Digital Marketer",
-    status: "busy",
-    statusLabel: "Busy",
-    tasks: 5,
-    initials: "JC",
-    color: "var(--warning)",
-  },
-  {
-    id: 4,
-    name: "Taylor Wilson",
-    role: "QA Engineer",
-    status: "offline",
-    statusLabel: "Offline",
-    tasks: 4,
-    initials: "TW",
-    color: "#94A3B8",
-  },
-  {
-    id: 5,
-    name: "Jordan Lee",
-    role: "Backend Engineer",
-    status: "online",
-    statusLabel: "Online",
-    tasks: 9,
-    initials: "JL",
-    color: "var(--danger)",
-  },
-];
+import React, { useState } from "react";
+import { Mail, MoreHorizontal } from "lucide-react";
+import { useQuery } from "@apollo/client";
+import { GET_TEAM } from "../graphql/operations";
+import InviteModal from "./InviteModal";
 
 const STATUS_COLORS: Record<string, string> = {
   online: "var(--success)",
@@ -62,6 +12,17 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const TeamView: React.FC = () => {
+  const { data, loading } = useQuery(GET_TEAM);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const users = data?.users || [];
+
+  const handleInvite = (member: { email: string; name: string }) => {
+    console.log("Inviting member:", member);
+    // In a real app, call a mutation here
+  };
+
+  if (loading) return <div className="main-content">Loading team...</div>;
+
   return (
     <div className="main-content">
       <div
@@ -89,26 +50,20 @@ const TeamView: React.FC = () => {
             Collaborate with your project team members.
           </p>
         </div>
-        <button className="btn-primary">+ Invite Member</button>
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>+ Invite Member</button>
       </div>
 
-      {/* Summary Cards */}
       <div className="stats-grid" style={{ marginBottom: "40px" }}>
         {[
           {
             label: "Total Members",
-            value: MEMBERS.length,
-            sub: "2 joined this month",
+            value: users.length,
+            sub: "Synced from Auth0",
           },
           {
-            label: "Currently Online",
-            value: MEMBERS.filter((m) => m.status === "online").length,
-            sub: "Out of 5 members",
-          },
-          {
-            label: "Active Tasks",
-            value: MEMBERS.reduce((s, m) => s + m.tasks, 0),
-            sub: "Across all members",
+            label: "Active Projects",
+            value: "Live",
+            sub: "Enterprise Scale",
           },
         ].map((item, i) => (
           <div key={i} className="stat-card" style={{ padding: "24px" }}>
@@ -147,7 +102,6 @@ const TeamView: React.FC = () => {
         ))}
       </div>
 
-      {/* Member Grid */}
       <div
         style={{
           display: "grid",
@@ -155,7 +109,7 @@ const TeamView: React.FC = () => {
           gap: "20px",
         }}
       >
-        {MEMBERS.map((m) => (
+        {users.map((m: any) => (
           <div
             key={m.id}
             className="stat-card"
@@ -166,23 +120,23 @@ const TeamView: React.FC = () => {
               alignItems: "center",
             }}
           >
-            {/* Avatar */}
             <div style={{ position: "relative", flexShrink: 0 }}>
               <div
                 style={{
                   width: 60,
                   height: 60,
                   borderRadius: "var(--radius-md)",
-                  background: m.color + "15",
-                  color: m.color,
+                  background: "var(--primary-light)",
+                  color: "var(--primary)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "18px",
                   fontWeight: 800,
+                  overflow: "hidden"
                 }}
               >
-                {m.initials}
+                {m.avatarUrl ? <img src={m.avatarUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : m.name[0]}
               </div>
               <span
                 style={{
@@ -192,13 +146,12 @@ const TeamView: React.FC = () => {
                   width: 14,
                   height: 14,
                   borderRadius: "50%",
-                  background: STATUS_COLORS[m.status],
+                  background: STATUS_COLORS.online,
                   border: "2px solid white",
                 }}
               />
             </div>
 
-            {/* Info */}
             <div style={{ flexGrow: 1, minWidth: 0 }}>
               <p
                 style={{
@@ -218,33 +171,10 @@ const TeamView: React.FC = () => {
                   marginBottom: "8px",
                 }}
               >
-                {m.role}
+                {m.email}
               </p>
-              <div
-                style={{ display: "flex", gap: "12px", alignItems: "center" }}
-              >
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: STATUS_COLORS[m.status],
-                  }}
-                >
-                  ● {m.statusLabel}
-                </span>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--text-muted)",
-                    fontWeight: 500,
-                  }}
-                >
-                  {m.tasks} active tasks
-                </span>
-              </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-1" style={{ flexShrink: 0 }}>
               <button className="icon-btn-ghost" title="Email">
                 <Mail size={16} />
@@ -256,6 +186,12 @@ const TeamView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      <InviteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onInvite={handleInvite}
+      />
     </div>
   );
 };

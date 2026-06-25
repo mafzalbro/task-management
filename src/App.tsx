@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./styles/App.css";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
@@ -13,69 +13,8 @@ import SettingsView from "./components/SettingsView";
 import useLocalStorage from "./hooks/useLocalStorage";
 import type { Post } from "./types";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-
-const initialTasks: Post[] = [
-  {
-    id: "1",
-    title: "Redesign Landing Page",
-    description: "Modernize the hero section with better CTA buttons.",
-    status: "To Do",
-    priority: "High",
-    dueDate: "2025-03-20",
-    projectId: "PJ1",
-    assignee: "Alex",
-  },
-  {
-    id: "2",
-    title: "Fix Auth Redirect Bug",
-    description: "Investigate the redirect loop after OAuth login.",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "2025-03-15",
-    projectId: "PJ1",
-    assignee: "Sam",
-  },
-  {
-    id: "3",
-    title: "Write API Documentation",
-    description: "Document all REST endpoints for the task service.",
-    status: "Review",
-    priority: "Medium",
-    dueDate: "2025-03-25",
-    projectId: "PJ1",
-    assignee: "Alex",
-  },
-  {
-    id: "4",
-    title: "Q2 Marketing Research",
-    description: "Gather competitor data for the product launch.",
-    status: "Completed",
-    priority: "Low",
-    dueDate: "2025-03-10",
-    projectId: "PJ2",
-    assignee: "Jamie",
-  },
-  {
-    id: "5",
-    title: "Email Template Design",
-    description: "Create responsive onboarding email templates.",
-    status: "To Do",
-    priority: "Medium",
-    dueDate: "2025-03-18",
-    projectId: "PJ2",
-    assignee: "Taylor",
-  },
-  {
-    id: "6",
-    title: "Set Up CI/CD Pipeline",
-    description: "Configure GitHub Actions for automated deployments.",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "2025-03-22",
-    projectId: "PJ3",
-    assignee: "Jordan",
-  },
-];
+import { useQuery, useMutation, useSubscription } from "@apollo/client";
+import { GET_TASKS, CREATE_TASK, UPDATE_TASK, TASK_CREATED_SUBSCRIPTION } from "./graphql/operations";
 
 const initialSettings = {
   userName: "Alex Rivera",
@@ -107,10 +46,14 @@ const pageVariants: Variants = {
 };
 
 function App() {
-  const [tasks, setTasks] = useLocalStorage<Post[]>(
-    "tm_tasks_v3",
-    initialTasks,
-  );
+  const { data, loading, refetch } = useQuery(GET_TASKS);
+  const [createTask] = useMutation(CREATE_TASK);
+  const [updateTask] = useMutation(UPDATE_TASK);
+
+  useSubscription(TASK_CREATED_SUBSCRIPTION, {
+    onData: () => { refetch(); }
+  });
+
   const [settings, setSettings] = useLocalStorage(
     "tm_settings_v3",
     initialSettings,
@@ -119,6 +62,13 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
+
+  const tasks: Post[] = data?.tasks?.map((t: any) => ({
+    ...t,
+    assignee: t.assigneeId || 'Unassigned',
+    status: t.status === 'TODO' ? 'To Do' : t.status === 'IN_PROGRESS' ? 'In Progress' : t.status === 'REVIEW' ? 'Review' : 'Completed',
+    priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase()
+  })) || [];
 
   // Apply Theme Color to CSS Variable
   useEffect(() => {
@@ -173,23 +123,44 @@ function App() {
     setEditTask(task);
     setIsModalOpen(true);
   };
-  const handleDelete = (id: string) =>
-    setTasks(tasks.filter((t) => t.id !== id));
+  const handleDelete = () => {
+    // Implement delete mutation
+  };
 
-  const handleSave = (task: Post) => {
+  const handleSave = async (task: Post) => {
     if (editTask) {
-      setTasks(tasks.map((t) => (t.id === task.id ? task : t)));
+      await updateTask({
+        variables: {
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status.replace(' ', '_').toUpperCase(),
+          priority: task.priority.toUpperCase()
+        }
+      });
     } else {
-      setTasks([
-        { ...task, id: Math.random().toString(36).substr(2, 9) },
-        ...tasks,
-      ]);
+      await createTask({
+        variables: {
+          title: task.title,
+          description: task.description,
+          projectId: task.projectId || 'PJ1',
+          status: task.status.replace(' ', '_').toUpperCase(),
+          priority: task.priority.toUpperCase()
+        }
+      });
     }
+    refetch();
     setIsModalOpen(false);
   };
 
-  const updateTaskStatus = (id: string, status: Post["status"]) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, status } : t)));
+  const updateTaskStatus = async (id: string, status: Post["status"]) => {
+    await updateTask({
+      variables: {
+        id,
+        status: status.replace(' ', '_').toUpperCase()
+      }
+    });
+    refetch();
   };
 
   const renderPage = () => {
@@ -198,6 +169,8 @@ function App() {
       onEdit: openEdit,
       onDelete: handleDelete,
     };
+
+    if (loading) return <div>Loading tasks...</div>;
 
     if (filteredTasks.length === 0 && searchQuery !== "") {
       return (
