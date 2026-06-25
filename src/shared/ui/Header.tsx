@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search, Bell, Plus, ChevronDown, Clock } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useQuery, useMutation, useSubscription } from "@apollo/client";
-import { GET_NOTIFICATIONS, MARK_NOTIFICATION_READ, MARK_ALL_NOTIFICATIONS_READ, NOTIFICATION_CREATED_SUBSCRIPTION } from "../graphql/operations";
+import { GET_NOTIFICATIONS, MARK_NOTIFICATION_READ, MARK_ALL_NOTIFICATIONS_READ, NOTIFICATION_CREATED_SUBSCRIPTION } from "../../shared/graphql";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {

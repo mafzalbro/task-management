@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Save, Check } from "lucide-react";
-import { useToast } from "../contexts/ToastContext";
+import { useToast } from "../../shared/providers";
 
 interface SettingsViewProps {
   settings: any;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_AUDIT_LOGS } from '../graphql/operations';
+import { GET_AUDIT_LOGS } from '../../shared/graphql';
 import { Clock, Zap, Edit3, Trash2, Plus } from 'lucide-react';
 
 interface TaskActivityFeedProps {

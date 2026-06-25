@@ -4,9 +4,16 @@ export const typeDefs = `#graphql
     IN_PROGRESS
     REVIEW
     COMPLETED
+    BACKLOG
   }
 
   enum TaskPriority {
+    LOW
+    MEDIUM
+    HIGH
+  }
+
+  enum EnergyLevel {
     LOW
     MEDIUM
     HIGH
@@ -35,6 +42,66 @@ export const typeDefs = `#graphql
     notes: [Note]
     project: Project
     assignee: User
+
+    # Enterprise Enhancements
+    parentId: String
+    parent: Task
+    subtasks: [Task]
+    dependencyIds: [String]
+    dependencies: [Task]
+    estimate: Int
+    actualEffort: Int
+    energyLevel: EnergyLevel
+    tags: [String]
+    sprintId: String
+    sprint: Sprint
+    epicId: String
+    epic: Epic
+  }
+
+  type Sprint {
+    id: ID!
+    name: String!
+    goal: String
+    startDate: String!
+    endDate: String!
+    status: String!
+    projectId: String!
+    tasks: [Task]
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type Epic {
+    id: ID!
+    name: String!
+    description: String
+    status: String!
+    projectId: String!
+    startDate: String
+    endDate: String
+    tasks: [Task]
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type Milestone {
+    id: ID!
+    name: String!
+    date: String!
+    description: String
+    projectId: String!
+    createdAt: String!
+  }
+
+  type AutomationRule {
+      id: ID!
+      name: String!
+      trigger: String!
+      action: String!
+      active: Boolean!
+      projectId: String!
+      createdAt: String!
   }
 
   type Project {
@@ -47,6 +114,10 @@ export const typeDefs = `#graphql
     updatedAt: String!
     tasks: [Task]
     members: [User]
+    sprints: [Sprint]
+    epics: [Epic]
+    milestones: [Milestone]
+    automationRules: [AutomationRule]
   }
 
   type User {
@@ -110,7 +181,7 @@ export const typeDefs = `#graphql
   }
 
   type Query {
-    tasks(projectId: String, status: TaskStatus, priority: TaskPriority): [Task]
+    tasks(projectId: String, status: TaskStatus, priority: TaskPriority, parentId: String, sprintId: String, epicId: String): [Task]
     task(id: ID!): Task
     projects: [Project]
     project(id: ID!): Project
@@ -120,6 +191,12 @@ export const typeDefs = `#graphql
     auditLogs(entityType: String!, entityId: String!): [AuditLog]
     projectAnalytics(projectId: String!): Analytics
     notifications: [Notification]
+    sprints(projectId: String): [Sprint]
+    sprint(id: ID!): Sprint
+    epics(projectId: String): [Epic]
+    epic(id: ID!): Epic
+    milestones(projectId: String): [Milestone]
+    automationRules(projectId: String!): [AutomationRule]
   }
 
   type Mutation {
@@ -131,6 +208,13 @@ export const typeDefs = `#graphql
       dueDate: String
       projectId: String!
       assigneeId: String
+      parentId: String
+      dependencyIds: [String]
+      estimate: Int
+      energyLevel: EnergyLevel
+      tags: [String]
+      sprintId: String
+      epicId: String
     ): Task
 
     updateTask(
@@ -141,6 +225,14 @@ export const typeDefs = `#graphql
       priority: TaskPriority
       dueDate: String
       assigneeId: String
+      parentId: String
+      dependencyIds: [String]
+      estimate: Int
+      actualEffort: Int
+      energyLevel: EnergyLevel
+      tags: [String]
+      sprintId: String
+      epicId: String
     ): Task
 
     deleteTask(id: ID!): Boolean
@@ -175,6 +267,45 @@ export const typeDefs = `#graphql
     assignManager(userId: ID!, managerId: ID!): User
     markNotificationAsRead(id: ID!): Notification
     markAllNotificationsAsRead: Boolean
+
+    createSprint(
+      name: String!
+      goal: String
+      startDate: String!
+      endDate: String!
+      projectId: String!
+    ): Sprint
+
+    updateSprint(
+      id: ID!
+      name: String
+      goal: String
+      startDate: String
+      endDate: String
+      status: String
+    ): Sprint
+
+    createEpic(
+        name: String!
+        description: String
+        projectId: String!
+        startDate: String
+        endDate: String
+    ): Epic
+
+    createMilestone(
+        name: String!
+        date: String!
+        description: String
+        projectId: String!
+    ): Milestone
+
+    createAutomationRule(
+        name: String!
+        trigger: String!
+        action: String!
+        projectId: String!
+    ): AutomationRule
   }
 
   type Subscription {
@@ -183,5 +314,7 @@ export const typeDefs = `#graphql
     projectCreated: Project
     noteCreated(projectId: String, taskId: String): Note
     notificationCreated: Notification
+    sprintCreated(projectId: String): Sprint
+    epicCreated(projectId: String): Epic
   }
 `;

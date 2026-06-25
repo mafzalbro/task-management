@@ -17,6 +17,15 @@ export class MongoTaskRepository implements ITaskRepository {
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       metadata: doc.metadata ? Object.fromEntries(doc.metadata) : undefined,
+
+      parentId: doc.parentId,
+      dependencyIds: doc.dependencyIds,
+      estimate: doc.estimate,
+      actualEffort: doc.actualEffort,
+      energyLevel: doc.energyLevel,
+      tags: doc.tags,
+      sprintId: doc.sprintId,
+      epicId: doc.epicId,
     };
   }
 

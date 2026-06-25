@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import type { Post } from "../types";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import type { Post } from "../../shared/types";
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, List } from "lucide-react";
 
 interface CalendarViewProps {
   tasks: Post[];
@@ -27,6 +27,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
+  const [viewMode, setViewMode] = useState<"month" | "week">("month");
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -88,10 +89,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
               fontWeight: 500,
             }}
           >
-            All your deadlines in a single view.
+            Manage your timeline and schedule.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
+          <div className="view-toggle-group">
+            <button
+              className={`view-toggle-btn ${viewMode === "month" ? "active" : ""}`}
+              onClick={() => setViewMode("month")}
+            >
+              <CalendarIcon size={16} /> Month
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === "week" ? "active" : ""}`}
+              onClick={() => setViewMode("week")}
+            >
+              <List size={16} /> Week
+            </button>
+          </div>
+
           <div className="flex gap-2">
             <button
               className="btn-secondary"
@@ -122,9 +138,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
             borderBottom: "1px solid var(--border-light)",
             fontWeight: 800,
             fontSize: "18px",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}
         >
-          {MONTHS[month]} {year}
+          <span>{MONTHS[month]} {year}</span>
+          <div className="flex items-center gap-2">
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }} />
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{tasks.length} Deadlines</span>
+          </div>
         </div>
 
         {/* Day Labels */}
@@ -160,7 +183,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
             <div
               key={i}
               style={{
-                minHeight: "120px",
+                minHeight: "140px",
                 padding: "12px",
                 borderRight:
                   i % 7 < 6 ? "1px solid var(--border-light)" : "none",
@@ -169,6 +192,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
                   day && isToday(day) ? "var(--primary-light)" : "transparent",
                 transition: "background 0.15s ease",
                 cursor: day ? "pointer" : "default",
+                position: 'relative'
               }}
               onMouseEnter={(e) => {
                 if (day && !isToday(day))
@@ -183,40 +207,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
             >
               {day && (
                 <>
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 30,
-                      height: 30,
-                      borderRadius: "50%",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      background: isToday(day)
-                        ? "var(--primary)"
-                        : "transparent",
-                      color: isToday(day) ? "white" : "var(--text-main)",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {day}
-                  </span>
-                  <div>
+                  <div className="flex justify-between items-center mb-3">
+                      <span
+                        style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        background: isToday(day)
+                            ? "var(--primary)"
+                            : "transparent",
+                        color: isToday(day) ? "white" : "var(--text-main)",
+                        }}
+                    >
+                        {day}
+                    </span>
+                    {getTasksForDay(day).length > 0 && (
+                        <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)' }}>
+                            {getTasksForDay(day).length} TASKS
+                        </div>
+                    )}
+                  </div>
+                  <div className="flex-col gap-1">
                     {getTasksForDay(day).map((t) => (
                       <div
                         key={t.id}
                         style={{
                           fontSize: "11px",
                           fontWeight: 700,
-                          padding: "3px 8px",
+                          padding: "4px 8px",
                           borderRadius: "6px",
-                          marginBottom: "4px",
-                          background: priorityColor(t.priority) + "20",
+                          background: priorityColor(t.priority) + "15",
                           color: priorityColor(t.priority),
+                          borderLeft: `3px solid ${priorityColor(t.priority)}`,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
+                          boxShadow: 'var(--shadow-sm)'
                         }}
                       >
                         {t.title}
@@ -228,6 +259,30 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onAddTask }) => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Quick Scheduling Sidebar / Time blocking placeholder */}
+      <div style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          <div className="stat-card">
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px' }}>Upcoming Deadlines</h3>
+              <div className="flex-col gap-3">
+                  {tasks.filter(t => t.dueDate).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5).map(t => (
+                      <div key={t.id} className="flex justify-between items-center p-3 bg-subtle rounded-lg border border-light">
+                          <span style={{ fontSize: '14px', fontWeight: 600 }}>{t.title}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>{t.dueDate}</span>
+                      </div>
+                  ))}
+              </div>
+          </div>
+          <div className="stat-card" style={{ background: 'var(--primary)', color: 'white', border: 'none' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px' }}>Calendar Sync</h3>
+              <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '24px' }}>
+                  Connect your Google or Outlook calendar to see all your meetings and tasks in one place.
+              </p>
+              <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
+                  Enable Sync
+              </button>
+          </div>
       </div>
     </div>
   );

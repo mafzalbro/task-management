@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import type { Post, Stat } from "../types";
+import type { Post, Stat } from "../../shared/types";
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useMutation, useQuery } from "@apollo/client";
-import { SYNC_USER, GET_TEAM } from "../graphql/operations";
+import { SYNC_USER, GET_TEAM } from "../../shared/graphql";
 
 interface DashboardProps {
   tasks: Post[];

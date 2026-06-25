@@ -1,24 +1,49 @@
 import { useState, useEffect } from "react";
 import "./styles/App.css";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import Dashboard from "./components/Dashboard";
-import TaskBoard from "./components/TaskBoard";
-import TaskModal from "./components/TaskModal";
-import TaskDetailDrawer from "./components/modals/TaskDetailDrawer";
-import ProjectsView from "./components/ProjectsView";
-import CalendarView from "./components/CalendarView";
-import TeamView from "./components/TeamView";
-import CommandPalette from "./components/modals/CommandPalette";
-import UpgradeModal from "./components/modals/UpgradeModal";
-import ReportsView from "./components/ReportsView";
-import SettingsView from "./components/SettingsView";
-import useLocalStorage from "./hooks/useLocalStorage";
-import type { Post } from "./types";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+
+// Shared components
+import Sidebar from "./shared/ui/Sidebar";
+import Header from "./shared/ui/Header";
+import UpgradeModal from "./shared/ui/UpgradeModal";
+
+// Domain components
+import Dashboard from "./domains/tasks/Dashboard";
+import TaskBoard from "./domains/tasks/TaskBoard";
+import TaskModal from "./domains/tasks/TaskModal";
+import TaskDetailDrawer from "./domains/tasks/TaskDetailDrawer";
+import ReportsView from "./domains/tasks/ReportsView";
+
+import ProjectsView from "./domains/projects/ProjectsView";
+
+import CalendarView from "./domains/calendar/CalendarView";
+
+import TeamView from "./domains/workspaces/TeamView";
+
+import SettingsView from "./domains/settings/SettingsView";
+
+import CommandPalette from "./domains/search/CommandPalette";
+
+import FocusMode from "./domains/focus/FocusMode";
+
+import SprintsView from "./domains/sprints/SprintsView";
+import RoadmapView from "./domains/roadmaps/RoadmapView";
+
+// Hooks & Providers
+import useLocalStorage from "./shared/hooks";
+import { useToast } from "./shared/providers";
+
+// Types & GraphQL
+import type { Post } from "./shared/types";
 import { useQuery, useMutation, useSubscription } from "@apollo/client";
-import { GET_TASKS, CREATE_TASK, UPDATE_TASK, DELETE_TASK, TASK_CREATED_SUBSCRIPTION } from "./graphql/operations";
-import { useToast } from "./contexts/ToastContext";
+import {
+  GET_TASKS,
+  CREATE_TASK,
+  UPDATE_TASK,
+  DELETE_TASK,
+  TASK_CREATED_SUBSCRIPTION
+} from "./shared/graphql";
+
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import confetti from "canvas-confetti";
 
 const initialSettings = {
@@ -37,6 +62,8 @@ const PAGE_TITLES: Record<string, string> = {
   team: "Team",
   reports: "Reports & Analytics",
   settings: "Settings",
+  sprints: "Sprints & Backlog",
+  roadmap: "Product Roadmap",
 };
 
 const pageVariants: Variants = {
@@ -85,6 +112,7 @@ function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [editTask, setEditTask] = useState<Post | null>(null);
 
   const mapStatusToUI = (status: string): Post["status"] => {
@@ -93,6 +121,7 @@ function App() {
       case "IN_PROGRESS": return "In Progress";
       case "REVIEW": return "Review";
       case "COMPLETED": return "Completed";
+      case "BACKLOG": return "Backlog";
       default: return "To Do";
     }
   };
@@ -103,6 +132,7 @@ function App() {
       case "In Progress": return "IN_PROGRESS";
       case "Review": return "REVIEW";
       case "Completed": return "COMPLETED";
+      case "Backlog": return "BACKLOG";
       default: return "TODO";
     }
   };
@@ -111,7 +141,8 @@ function App() {
     ...t,
     assignee: t.assignee?.name || t.assigneeId || 'Unassigned',
     status: mapStatusToUI(t.status),
-    priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase()
+    priority: t.priority.charAt(0) + t.priority.slice(1).toLowerCase(),
+    energyLevel: t.energyLevel ? t.energyLevel.charAt(0) + t.energyLevel.slice(1).toLowerCase() : undefined
   })) || [];
 
   // Apply Theme Color to CSS Variable
@@ -135,6 +166,11 @@ function App() {
       }
       if (e.key === "Escape") {
         setIsCommandPaletteOpen(false);
+        setIsFocusModeOpen(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "F") {
+        e.preventDefault();
+        setIsFocusModeOpen(true);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -192,7 +228,15 @@ function App() {
             status: mapUIToStatus(task.status),
             priority: task.priority.toUpperCase(),
             dueDate: task.dueDate,
-            assigneeId: task.assigneeId
+            assigneeId: task.assigneeId,
+            parentId: task.parentId,
+            dependencyIds: task.dependencyIds,
+            estimate: task.estimate,
+            actualEffort: task.actualEffort,
+            energyLevel: task.energyLevel?.toUpperCase(),
+            tags: task.tags,
+            sprintId: task.sprintId,
+            epicId: task.epicId
           }
         });
       } else {
@@ -204,7 +248,14 @@ function App() {
             status: mapUIToStatus(task.status),
             priority: task.priority.toUpperCase(),
             dueDate: task.dueDate,
-            assigneeId: task.assigneeId
+            assigneeId: task.assigneeId,
+            parentId: task.parentId,
+            dependencyIds: task.dependencyIds,
+            estimate: task.estimate,
+            energyLevel: task.energyLevel?.toUpperCase(),
+            tags: task.tags,
+            sprintId: task.sprintId,
+            epicId: task.epicId
           }
         });
       }
@@ -296,19 +347,38 @@ function App() {
         return (
           <SettingsView settings={settings} onUpdateSettings={setSettings} />
         );
+      case "sprints":
+          return <SprintsView projectId="PJ1" />;
+      case "roadmap":
+          return <RoadmapView projectId="PJ1" />;
       default:
         return null;
     }
   };
 
-  const handleCommandSelect = (id: string) => {
+  const handleCommandSelect = (id: string, metadata?: any) => {
+    if (id.startsWith('task-') && metadata) {
+        setEditTask(metadata);
+        setIsDrawerOpen(true);
+        return;
+    }
+    if (id.startsWith('project-') && metadata) {
+        setActiveTab('projects');
+        return;
+    }
+
     switch (id) {
       case 'new-task': openAdd(); break;
       case 'dashboard': setActiveTab('dashboard'); break;
       case 'tasks': setActiveTab('tasks'); break;
-      case 'projects': setActiveTab('projects'); break;
+      case 'projects-view': setActiveTab('projects'); break;
+      case 'calendar': setActiveTab('calendar'); break;
       case 'team': setActiveTab('team'); break;
+      case 'reports': setActiveTab('reports'); break;
       case 'settings': setActiveTab('settings'); break;
+      case 'sprints': setActiveTab('sprints'); break;
+      case 'roadmap': setActiveTab('roadmap'); break;
+      case 'focus-mode': setIsFocusModeOpen(true); break;
     }
   };
 
@@ -358,12 +428,20 @@ function App() {
         onClose={() => setIsDrawerOpen(false)}
         onDelete={handleDelete}
         onStatusChange={updateTaskStatus}
+        onSave={handleSave}
       />
 
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         onSelect={handleCommandSelect}
+      />
+
+      <FocusMode
+        isOpen={isFocusModeOpen}
+        onClose={() => setIsFocusModeOpen(false)}
+        task={editTask}
+        onComplete={updateTaskStatus}
       />
 
       <UpgradeModal

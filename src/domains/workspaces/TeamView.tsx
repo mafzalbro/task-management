@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Mail, Shield, User as UserIcon, Users, Star, ChevronRight, Settings } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_TEAM, INVITE_USER, UPDATE_USER_ROLE, ASSIGN_MANAGER } from "../graphql/operations";
+import { GET_TEAM, INVITE_USER, UPDATE_USER_ROLE, ASSIGN_MANAGER } from "../../shared/graphql";
 import InviteModal from "./InviteModal";
-import { useToast } from "../contexts/ToastContext";
+import { useToast } from "../../shared/providers";
 
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: "var(--danger)",

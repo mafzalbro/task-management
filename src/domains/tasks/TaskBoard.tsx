@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Post } from "../types";
+import type { Post } from "../../shared/types";
 import { Plus, Search, LayoutGrid, List, Calendar as CalendarIcon, Filter, X, CheckCircle, Trash, Check } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { motion, AnimatePresence } from "framer-motion";
